@@ -50,13 +50,13 @@ var createScene = function() {
     var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
     groundMaterial.diffuseTexture = groundTexture;
 
-    var ground = BABYLON.Mesh.CreateGround("ground", 512, 512, 32, scene, false);
+    var ground = BABYLON.Mesh.CreateGround("ground", 1024, 1024, 32, scene, false);
     ground.position.y = -1;
     ground.material = groundMaterial;
     ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
 
     // Water mesh
-    var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 512, 512, 32, scene, false);
+    var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 1024, 1024, 32, scene, false);
     waterMesh.material = waterMaterial;
     waterMesh.physicsImpostor = new BABYLON.PhysicsImpostor(waterMesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
     
@@ -105,6 +105,7 @@ var createScene = function() {
         // Attach camera to canvas inputs
         console.log(newMeshes)
         scene.activeCamera.attachControl(canvas);
+        camera.target=newMeshes[0];
 
             
 		scene.registerBeforeRender(boatMovement.bind(this, newMeshes));
