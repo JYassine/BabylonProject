@@ -1,2 +1,3 @@
-# babylonJs_sample_server
-A simple nodeJs express server.
+# BABYNOMOK
+
+Concours web 2020 - CGI
