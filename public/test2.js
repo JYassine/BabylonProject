@@ -84,6 +84,12 @@ var createScene = function() {
                 dir = boat[0].getDirection(new BABYLON.Vector3(0, 0, 1))
                 boat[0].position.x+=dir.x
                 boat[0].position.z+=dir.z
+                boat.forEach(mesh=>{
+                    if(mesh.name==="Plane.000" || mesh.name==="Plane.029" || mesh.name==="Plane.047"
+                    || mesh.name==="Plane.017" || mesh.name==="Plane.019" || mesh.name==="Plane.008" || mesh.name==="Plane.035" ){
+                        mesh.rotate(BABYLON.Axis.Z, Math.PI / 15, BABYLON.Space.LOCAL)
+                    }
+                })
             };
         
             if ((map["q"] || map["Q"])) {
@@ -94,19 +100,15 @@ var createScene = function() {
             if ((map["d"] || map["D"])) {
                 boat[0].rotate(BABYLON.Axis.Y, Math.PI / 100, BABYLON.Space.WORLD); 
             };
-        
 
-        
-
+            
     }
-
     BABYLON.SceneLoader.ImportMesh("","./", "boat.glb", scene, function (newMeshes) {
             
         // Attach camera to canvas inputs
         console.log(newMeshes)
         scene.activeCamera.attachControl(canvas);
         camera.target=newMeshes[0];
-
             
 		scene.registerBeforeRender(boatMovement.bind(this, newMeshes));
 
