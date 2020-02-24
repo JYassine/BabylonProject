@@ -5,6 +5,8 @@ var engine = new BABYLON.Engine(canvas, true)
 var bigBoat;
 // THE DYNAMIC TERRAIN
 var dynamicTerrain;
+//MUSIC
+var musicBoat;
 
 
 // ADD THE LIBRARY TO CONSTRUCT DYNAMIC TERRAIN
@@ -21,8 +23,9 @@ var createScene = function () {
     addLibraryDynamicTerrain();
 
     var scene = new BABYLON.Scene(engine);
-    var boat;
-    scene.enablePhysics();
+    var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
+    var physicsPlugin = new BABYLON.CannonJSPlugin();
+    scene.enablePhysics(gravityVector, physicsPlugin);
 
     scene.collisionsEnabled = true;
 
@@ -52,7 +55,7 @@ var createScene = function () {
     // Water material
     var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", scene, new BABYLON.Vector2(512, 512));
     waterMaterial.bumpTexture = new BABYLON.Texture("//www.babylonjs.com/assets/waterbump.png", scene);
-    waterMaterial.windForce = -20;
+    waterMaterial.windForce = -10;
     waterMaterial.waveHeight = 0.2;
     waterMaterial.bumpHeight = 0.1;
     waterMaterial.waveLength = 0.1;
@@ -69,14 +72,19 @@ var createScene = function () {
     groundMaterial.diffuseTexture = groundTexture;
 
     var ground = BABYLON.Mesh.CreateGround("ground", 8192, 8192, 2, scene, false);
-    ground.position.y = -1;
+    ground.position.y = -4;
     ground.material = groundMaterial;
+    ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 1 }, scene);
 
     // Water mesh
     var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 8192, 8192, 2, scene, false);
     waterMesh.material = waterMaterial;
     waterMaterial.addToRenderList(ground);
     waterMaterial.addToRenderList(skybox);
+
+
+
+
 
     // Add the action manager of babylon to handle keypad
     var map = {}; //object for multiple key presses
@@ -148,8 +156,13 @@ var createScene = function () {
 
     }
 
-
     /****** Import from blender other mesh ******/
+
+    var box = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+    box.checkCollisions = true
+    box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0 }, scene);
+    box.isVisible = false
+
 
     BABYLON.SceneLoader.ImportMesh("", "./", "boat.glb", scene, function (newMeshes) {
         scene.activeCamera.attachControl(canvas);
@@ -178,10 +191,53 @@ var createScene = function () {
                 )
             );
         })
+        var box2 = new BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 15, diameterX: 15 }, scene);
+        box2.checkCollisions = true
+        box2.position.y = 20
+        box2.position.z = 2800
+        box2.physicsImpostor = new BABYLON.PhysicsImpostor(box2, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, friction: 0, restitution: 0 }, scene);
+
+        box.position.y = newMeshes[0].position.y
+        box.position.z = newMeshes[0].position.z
+        box.position.x = newMeshes[0].position.x
+
 
 
         waterMaterial.addToRenderList(newMeshes[0]);
-        scene.registerBeforeRender(boatMovement.bind(this, newMeshes, map, camera));
+        bigBoat = newMeshes
+
+
+    });
+
+
+    //HANDLE SOUND
+
+    musicBoat = new BABYLON.Sound("boatSong", "audio/boat_song.wav", scene, null, {
+        loop: true,
+        autoplay: false,
+        volume:0.3
+    });
+
+    document.addEventListener("keydown", function (e) {
+        switch (e.keyCode) {
+            case 90:
+                if (musicBoat.isPlaying===false) {
+                    musicBoat.play()
+                }
+                break;
+        }
+    });
+
+    document.addEventListener("keyup", function (e) {
+        switch (e.keyCode) {
+            case 90:
+                if (musicBoat.isPlaying) {
+                    musicBoat.pause()
+                }
+                break;
+        }
+
+
 
 
     });
@@ -215,14 +271,42 @@ var createScene = function () {
 
         if (bigBoat != undefined) {
             bigBoat.checkCollisions = true
-
+            box.position.y = bigBoat[0].position.y + 10
+            box.position.z = bigBoat[0].position.z
+            box.position.x = bigBoat[0].position.x
             camera.position.copyFrom(bigBoat[0].position.subtract(bigBoat[0].forward.scale(40)).add(new BABYLON.Vector3(0, 1.2, 0)))
-
             camera.setTarget(new BABYLON.Vector3(bigBoat[0].position.x, bigBoat[0].position.y, bigBoat[0].position.z))
             camera.position.y = 15
         }
 
     });
+
+    scene.registerAfterRender(function () {
+        if ((map["z"] || map["Z"])) {
+
+            dir = bigBoat[0].getDirection(new BABYLON.Vector3(0, 0, 8))
+            bigBoat[0].position.x += dir.x
+            bigBoat[0].position.z += dir.z
+            bigBoat.forEach(mesh => {
+                if (mesh.name === "Plane.000" || mesh.name === "Plane.029" || mesh.name === "Plane.047"
+                    || mesh.name === "Plane.017" || mesh.name === "Plane.019" || mesh.name === "Plane.008" || mesh.name === "Plane.035") {
+                    mesh.rotate(BABYLON.Axis.Z, Math.PI / 15, BABYLON.Space.LOCAL)
+                }
+            })
+        }
+        if ((map["q"] || map["Q"])) {
+            if (bigBoat[0]._rotationQuaternion.w <= 0.80) {
+                bigBoat[0].rotate(BABYLON.Axis.Y, -Math.PI / 100, BABYLON.Space.WORLD);
+            }
+        }
+        if ((map["d"] || map["D"])) {
+            if (bigBoat[0]._rotationQuaternion.w >= -0.80) {
+                bigBoat[0].rotate(BABYLON.Axis.Y, Math.PI / 100, BABYLON.Space.WORLD);
+            }
+        }
+
+    });
+
 
 
     return scene;
@@ -245,32 +329,4 @@ window.addEventListener('resize', function () {
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
-}
-// Handle the movement of the boat with keypad
-function boatMovement(boat, map, camera) {
-    bigBoat = boat;
-    if ((map["z"] || map["Z"])) {
-        dir = boat[0].getDirection(new BABYLON.Vector3(0, 0, 8))
-        boat[0].position.x += dir.x
-        boat[0].position.z += dir.z
-        boat.forEach(mesh => {
-            if (mesh.name === "Plane.000" || mesh.name === "Plane.029" || mesh.name === "Plane.047"
-                || mesh.name === "Plane.017" || mesh.name === "Plane.019" || mesh.name === "Plane.008" || mesh.name === "Plane.035") {
-                mesh.rotate(BABYLON.Axis.Z, Math.PI / 15, BABYLON.Space.LOCAL)
-            }
-        })
-    };
-
-    if ((map["q"] || map["Q"])) {
-        if (boat[0]._rotationQuaternion.w <= 0.80) {
-            boat[0].rotate(BABYLON.Axis.Y, -Math.PI / 100, BABYLON.Space.WORLD);
-        }
-
-    };
-
-    if ((map["d"] || map["D"])) {
-        if (boat[0]._rotationQuaternion.w >= -0.80) {
-            boat[0].rotate(BABYLON.Axis.Y, Math.PI / 100, BABYLON.Space.WORLD);
-        }
-    };
 }
