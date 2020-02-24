@@ -201,8 +201,6 @@ var createScene = function () {
         box.position.z = newMeshes[0].position.z
         box.position.x = newMeshes[0].position.x
 
-
-
         waterMaterial.addToRenderList(newMeshes[0]);
         bigBoat = newMeshes
 
@@ -211,6 +209,8 @@ var createScene = function () {
 
 
     //HANDLE SOUND
+    
+    BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
 
     musicBoat = new BABYLON.Sound("boatSong", "audio/boat_song.wav", scene, null, {
         loop: true,
@@ -223,6 +223,7 @@ var createScene = function () {
             case 90:
                 if (musicBoat.isPlaying===false) {
                     musicBoat.play()
+                    BABYLON.Engine.audioEngine.unlock();
                 }
                 break;
         }
