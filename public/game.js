@@ -1,4 +1,3 @@
-
 var canvas = document.getElementById('renderCanvas');
 var engine = new BABYLON.Engine(canvas, true)
 // OUR BOAT
@@ -8,27 +7,163 @@ var dynamicTerrain;
 //MUSIC
 var musicBoat;
 
+var numberCheckPoint = 10
+var numberCheckPointPassed = 0
+var textPassed = new BABYLON.GUI.TextBlock();
 
-// ADD THE LIBRARY TO CONSTRUCT DYNAMIC TERRAIN
-const addLibraryDynamicTerrain = () => {
-    var url = "https://cdn.rawgit.com/BabylonJS/Extensions/master/DynamicTerrain/dist/babylon.dynamicTerrain.min.js";
-    dynamicTerrain = document.createElement("script");
-    dynamicTerrain.src = url;
-    document.head.appendChild(dynamicTerrain)
+const displayGUI = (textPassed, scene) => {
+    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var rect1 = new BABYLON.GUI.Rectangle();
+    rect1.adaptWidthToChildren = true;
+    rect1.height = "40px";
+    rect1.width = "200px"
+    rect1.cornerRadius = 20;
+    rect1.color = "Orange";
+    rect1.thickness = 4;
+    rect1.background = "green";
+    advancedTexture.addControl(rect1);
+    rect1.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+
+    textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
+    textPassed.color = "white";
+    textPassed.fontSize = 24;
+    rect1.addControl(textPassed);
+    /**** GUI ******/
+    BABYLON.DefaultLoadingScreen.prototype.displayLoadingUI = function () {
+        if (document.getElementById("customLoadingScreenDiv")) {
+            // Do not add a loading screen if there is already one
+            document.getElementById("customLoadingScreenDiv").style.display = "initial";
+            return;
+        }
+        this._loadingDiv = document.createElement("div");
+        this._loadingDiv.id = "customLoadingScreenDiv";
+        this._loadingDiv.innerHTML = "scene is currently loading";
+        var customLoadingScreenCss = document.createElement('style');
+        customLoadingScreenCss.type = 'text/css';
+        customLoadingScreenCss.innerHTML = `
+        #customLoadingScreenDiv{
+            background-color: #BB464Bcc;
+            color: white;
+            font-size:50px;
+            text-align:center;
+        }
+        `;
+        document.getElementsByTagName('head')[0].appendChild(customLoadingScreenCss);
+        this._resizeLoadingUI();
+        window.addEventListener("resize", this._resizeLoadingUI);
+        document.body.appendChild(this._loadingDiv);
+    };
+
+    BABYLON.DefaultLoadingScreen.prototype.hideLoadingUI = function () {
+        document.getElementById("customLoadingScreenDiv").style.display = "none";
+        console.log("scene is now loaded");
+    }
+
+    var meContMoveBtnWidth = "40px";
+    var meContMoveBtnHeight = "40px";
+
+    var style = advancedTexture.createStyle();
+    style.fontSize = 20;
+    style.fontFamily = "Arial, Helvetica, sans-serif";
+    style.fontWeight = "bold";
+
+    var menuContainerMove = new BABYLON.GUI.Rectangle()
+    menuContainerMove.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    menuContainerMove.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    menuContainerMove.width = "100px";
+    menuContainerMove.height = "100px";
+    advancedTexture.addControl(menuContainerMove);
+
+    var menuContainerMoveGrid = new BABYLON.GUI.Grid();
+    menuContainerMove.addControl(menuContainerMoveGrid);
+
+
+    menuContainerMoveGrid.addColumnDefinition(0, false);
+    menuContainerMoveGrid.addColumnDefinition(0.3);
+    menuContainerMoveGrid.addColumnDefinition(0.3);
+    menuContainerMoveGrid.addColumnDefinition(0.3);
+    menuContainerMoveGrid.addColumnDefinition(0, false);
+    menuContainerMoveGrid.addRowDefinition(0.3);
+    menuContainerMoveGrid.addRowDefinition(0.3);
+    menuContainerMoveGrid.addRowDefinition(0.3);
+
+
+    var buttonZ = BABYLON.GUI.Button.CreateSimpleButton("Z", "Z");
+    buttonZ.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    buttonZ.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    buttonZ.width = meContMoveBtnWidth;
+    buttonZ.height = meContMoveBtnHeight;
+    buttonZ.background = "red";
+    buttonZ.hoverCursor = "pointer";
+    buttonZ.style = style;
+
+    menuContainerMoveGrid.addControl(buttonZ, 0, 2);
+
+
+    var buttonQ = BABYLON.GUI.Button.CreateSimpleButton("Q", "Q");
+    buttonQ.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    buttonQ.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    buttonQ.width = meContMoveBtnWidth;
+    buttonQ.height = meContMoveBtnHeight;
+    buttonQ.background = "red";
+    buttonQ.hoverCursor = "pointer";
+    buttonQ.style = style;
+
+    menuContainerMoveGrid.addControl(buttonQ, 2, 1);
+
+    var buttonD = BABYLON.GUI.Button.CreateSimpleButton("D", "D");
+    buttonD.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    buttonD.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    buttonD.width = meContMoveBtnWidth;
+    buttonD.height = meContMoveBtnHeight;
+    buttonD.background = "red";
+    buttonD.hoverCursor = "pointer";
+    buttonD.style = style;
+    menuContainerMoveGrid.addControl(buttonD, 2, 3);
+
+    document.addEventListener("keydown", function (e) {
+        switch (e.keyCode) {
+            case 90:
+                buttonZ.background = "green";
+                break;
+            case 81:
+                buttonQ.background = "green";
+                break;
+            case 68:
+                buttonD.background = "green";
+                break;
+
+
+        }
+    });
+
+    document.addEventListener("keyup", function (e) {
+        switch (e.keyCode) {
+            case 90:
+                buttonZ.background = "red";
+                break;
+            case 81:
+                buttonQ.background = "red";
+                break;
+            case 68:
+                buttonD.background = "red";
+                break;
+        }
+
+    });
+
 }
 
 
 var createScene = function () {
-
-    addLibraryDynamicTerrain();
-
     var scene = new BABYLON.Scene(engine);
+    
     var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
     var physicsPlugin = new BABYLON.CannonJSPlugin();
     scene.enablePhysics(gravityVector, physicsPlugin);
-
     scene.collisionsEnabled = true;
-
+    
     // Parameters : name, position, scene
     var camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(0, 0, -10), scene);
 
@@ -37,6 +172,9 @@ var createScene = function () {
 
     // Attach the camera to the canvas
     camera.attachControl(canvas, true);
+
+    displayGUI(textPassed, scene)
+    engine.displayLoadingUI()
 
     // Light
     var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 1), scene);
@@ -81,9 +219,6 @@ var createScene = function () {
     waterMesh.material = waterMaterial;
     waterMaterial.addToRenderList(ground);
     waterMaterial.addToRenderList(skybox);
-
-
-
 
 
     // Add the action manager of babylon to handle keypad
@@ -138,8 +273,6 @@ var createScene = function () {
     /***** CUSTOM LIGHT  ******/
 
     /******** Create checkpoints *******/
-    var numberCheckPoint = 10
-    var numberCheckPointPassed = 0
     var checkpoints = []
     baseFirstCheckPoint = -7000
     for (i = 0; i < numberCheckPoint; i++) {
@@ -163,65 +296,75 @@ var createScene = function () {
     box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0 }, scene);
     box.isVisible = false
 
-
     BABYLON.SceneLoader.ImportMesh("", "./", "boat.glb", scene, function (newMeshes) {
-        scene.activeCamera.attachControl(canvas);
-        newMeshes[0].position.y = 1
-        newMeshes[0].position.z = 3000 - 100
-        newMeshes[0].scaling.x = 0.4
-        newMeshes[0].scaling.y = 0.4
-        newMeshes[0].scaling.z = 0.4
-        newMeshes[0].actionManager = new BABYLON.ActionManager(scene);
-        newMeshes[0].checkCollisions = true
+       
+        scene.executeWhenReady(function () {
 
-
-        /**** HANDLE COLLISION WITH CHECKPOINT *****/
-        checkpoints.forEach(checkP => {
-            newMeshes[0].actionManager.registerAction(
-                new BABYLON.ExecuteCodeAction(
-                    {
-                        trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
-                        parameter: checkP
-                    },
-                    function () {
-                        checkP.dispose()
-                        numberCheckPointPassed += 1
-                        text1.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
-                    }
-                )
-            );
-        })
-        var box2 = new BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 15, diameterX: 15 }, scene);
-        box2.checkCollisions = true
-        box2.position.y = 20
-        box2.position.z = 2800
-        box2.physicsImpostor = new BABYLON.PhysicsImpostor(box2, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, friction: 0, restitution: 0 }, scene);
-
-        box.position.y = newMeshes[0].position.y
-        box.position.z = newMeshes[0].position.z
-        box.position.x = newMeshes[0].position.x
-
-        waterMaterial.addToRenderList(newMeshes[0]);
-        bigBoat = newMeshes
-
+            scene.activeCamera.attachControl(canvas);
+            newMeshes[0].position.y = 1
+            newMeshes[0].position.z = 3000 - 100
+            newMeshes[0].scaling.x = 0.4
+            newMeshes[0].scaling.y = 0.4
+            newMeshes[0].scaling.z = 0.4
+            newMeshes[0].actionManager = new BABYLON.ActionManager(scene);
+            newMeshes[0].checkCollisions = true
+    
+    
+            /**** HANDLE COLLISION WITH CHECKPOINT *****/
+            checkpoints.forEach(checkP => {
+                newMeshes[0].actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(
+                        {
+                            trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
+                            parameter: checkP
+                        },
+                        function () {
+                            checkP.dispose()
+                            numberCheckPointPassed += 1
+                            textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
+                        }
+                    )
+                );
+            })
+            /*var box2 = new BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 15, diameterX: 15 }, scene);
+            box2.checkCollisions = true
+            box2.position.y = 20
+            box2.position.z = 2800
+            box2.physicsImpostor = new BABYLON.PhysicsImpostor(box2, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, friction: 0, restitution: 0 }, scene);
+            */
+            box.position.y = newMeshes[0].position.y
+            box.position.z = newMeshes[0].position.z
+            box.position.x = newMeshes[0].position.x
+    
+            waterMaterial.addToRenderList(newMeshes[0]);
+            bigBoat = newMeshes
+           
+          
+            scene.activeCamera.attachControl(canvas); 
+            engine.hideLoadingUI()       
+            engine.runRenderLoop(function () {           
+                scene.render();        
+            });   
+       });
 
     });
 
 
+
     //HANDLE SOUND
-    
+
     BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
 
     musicBoat = new BABYLON.Sound("boatSong", "audio/boat_song.wav", scene, null, {
         loop: true,
         autoplay: false,
-        volume:0.3
+        volume: 0.3
     });
 
     document.addEventListener("keydown", function (e) {
         switch (e.keyCode) {
             case 90:
-                if (musicBoat.isPlaying===false) {
+                if (musicBoat.isPlaying === false) {
                     musicBoat.play()
                     BABYLON.Engine.audioEngine.unlock();
                 }
@@ -242,30 +385,6 @@ var createScene = function () {
 
 
     });
-
-
-
-    /**** GUI ******/
-    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
-    var rect1 = new BABYLON.GUI.Rectangle();
-    rect1.adaptWidthToChildren = true;
-    rect1.height = "40px";
-    rect1.width = "200px"
-    rect1.cornerRadius = 20;
-    rect1.color = "Orange";
-    rect1.thickness = 4;
-    rect1.background = "green";
-    advancedTexture.addControl(rect1);
-    rect1.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-
-    var text1 = new BABYLON.GUI.TextBlock();
-    text1.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
-    text1.color = "white";
-    text1.fontSize = 24;
-    rect1.addControl(text1);
-    /**** GUI ******/
-
 
 
     scene.registerBeforeRender(function () {
@@ -305,26 +424,19 @@ var createScene = function () {
                 bigBoat[0].rotate(BABYLON.Axis.Y, Math.PI / 100, BABYLON.Space.WORLD);
             }
         }
-
     });
 
 
-
+    
     return scene;
 }
 
 
 
 var scene = createScene();
-engine.runRenderLoop(function () {
-    scene.render();
-});
 window.addEventListener('resize', function () {
     engine.resize();
 });
-
-
-
 
 /*** FUNCTION USED  ***/
 
