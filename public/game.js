@@ -6,10 +6,47 @@ var bigBoat;
 var dynamicTerrain;
 //MUSIC
 var musicBoat;
+var musicSucceedCheckPoint;
+var musicWind;
 
-var numberCheckPoint = 10
+// checkpoint
+var numberCheckPoint = 5
 var numberCheckPointPassed = 0
+
+// gui text
 var textPassed = new BABYLON.GUI.TextBlock();
+
+// LOADING SCREEN
+BABYLON.DefaultLoadingScreen.prototype.displayLoadingUI = function () {
+    if (document.getElementById("customLoadingScreenDiv")) {
+        // Do not add a loading screen if there is already one
+        document.getElementById("customLoadingScreenDiv").style.display = "initial";
+        return;
+    }
+    this._loadingDiv = document.createElement("div");
+    this._loadingDiv.id = "customLoadingScreenDiv";
+    this._loadingDiv.innerHTML = "Scene is loading...";
+
+
+    var customLoadingScreenCss = document.createElement('style');
+    customLoadingScreenCss.type = 'text/css';
+    customLoadingScreenCss.innerHTML = `
+    #customLoadingScreenDiv{
+        background-color: #000000;
+        color: white;
+        font-size:50px;
+        text-align:center;
+    }
+    `;
+    document.getElementsByTagName('head')[0].appendChild(customLoadingScreenCss);
+    this._resizeLoadingUI();
+    window.addEventListener("resize", this._resizeLoadingUI);
+    document.body.appendChild(this._loadingDiv);
+};
+
+BABYLON.DefaultLoadingScreen.prototype.hideLoadingUI = function () {
+    document.getElementById("customLoadingScreenDiv").style.display = "none";
+}
 
 const displayGUI = (textPassed, scene) => {
     var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -29,36 +66,7 @@ const displayGUI = (textPassed, scene) => {
     textPassed.color = "white";
     textPassed.fontSize = 24;
     rect1.addControl(textPassed);
-    /**** GUI ******/
-    BABYLON.DefaultLoadingScreen.prototype.displayLoadingUI = function () {
-        if (document.getElementById("customLoadingScreenDiv")) {
-            // Do not add a loading screen if there is already one
-            document.getElementById("customLoadingScreenDiv").style.display = "initial";
-            return;
-        }
-        this._loadingDiv = document.createElement("div");
-        this._loadingDiv.id = "customLoadingScreenDiv";
-        this._loadingDiv.innerHTML = "scene is currently loading";
-        var customLoadingScreenCss = document.createElement('style');
-        customLoadingScreenCss.type = 'text/css';
-        customLoadingScreenCss.innerHTML = `
-        #customLoadingScreenDiv{
-            background-color: #BB464Bcc;
-            color: white;
-            font-size:50px;
-            text-align:center;
-        }
-        `;
-        document.getElementsByTagName('head')[0].appendChild(customLoadingScreenCss);
-        this._resizeLoadingUI();
-        window.addEventListener("resize", this._resizeLoadingUI);
-        document.body.appendChild(this._loadingDiv);
-    };
 
-    BABYLON.DefaultLoadingScreen.prototype.hideLoadingUI = function () {
-        document.getElementById("customLoadingScreenDiv").style.display = "none";
-        console.log("scene is now loaded");
-    }
 
     var meContMoveBtnWidth = "40px";
     var meContMoveBtnHeight = "40px";
@@ -95,7 +103,6 @@ const displayGUI = (textPassed, scene) => {
     buttonZ.width = meContMoveBtnWidth;
     buttonZ.height = meContMoveBtnHeight;
     buttonZ.background = "red";
-    buttonZ.hoverCursor = "pointer";
     buttonZ.style = style;
 
     menuContainerMoveGrid.addControl(buttonZ, 0, 2);
@@ -107,7 +114,6 @@ const displayGUI = (textPassed, scene) => {
     buttonQ.width = meContMoveBtnWidth;
     buttonQ.height = meContMoveBtnHeight;
     buttonQ.background = "red";
-    buttonQ.hoverCursor = "pointer";
     buttonQ.style = style;
 
     menuContainerMoveGrid.addControl(buttonQ, 2, 1);
@@ -118,7 +124,6 @@ const displayGUI = (textPassed, scene) => {
     buttonD.width = meContMoveBtnWidth;
     buttonD.height = meContMoveBtnHeight;
     buttonD.background = "red";
-    buttonD.hoverCursor = "pointer";
     buttonD.style = style;
     menuContainerMoveGrid.addControl(buttonD, 2, 3);
 
@@ -274,13 +279,13 @@ var createScene = function () {
 
     /******** Create checkpoints *******/
     var checkpoints = []
-    baseFirstCheckPoint = -7000
+    baseFirstCheckPoint = -2000
     for (i = 0; i < numberCheckPoint; i++) {
         var checkPoint = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 600, tessellation: 96 }, scene);
 
         checkPoint.position.z = baseFirstCheckPoint
         if (i >= 2) {
-            checkPoint.position.x = getRandomInt(1000)
+            checkPoint.position.x = getRandomInt(200)
         }
         checkPoint.material = checkPointLight;
         checkPoint.checkCollisions = true
@@ -288,6 +293,31 @@ var createScene = function () {
         baseFirstCheckPoint += 1000
 
     }
+
+    /********** HANDLE SOUND **********/
+
+    BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
+
+    musicBoat = new BABYLON.Sound("boatSong", "audio/boat_song.wav", scene, null, {
+        loop: true,
+        autoplay: false,
+        volume: 0.3
+    });
+
+
+    musicSucceedCheckPoint = new BABYLON.Sound("checkPoint", "audio/success_checkpoint.wav", scene, null, {
+        loop: true,
+        autoplay: false,
+        volume: 0.6
+    });
+
+    musicWind = new BABYLON.Sound("wind", "audio/wind.wav", scene, null, {
+        loop: true,
+        autoplay: true,
+        volume: 1
+    });
+
+    
 
     /****** Import from blender other mesh ******/
 
@@ -320,8 +350,11 @@ var createScene = function () {
                         },
                         function () {
                             checkP.dispose()
+                            musicSucceedCheckPoint.play()
+                            setTimeout(()=>{musicSucceedCheckPoint.stop()},900)
                             numberCheckPointPassed += 1
                             textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
+
                         }
                     )
                 );
@@ -349,24 +382,13 @@ var createScene = function () {
 
     });
 
-
-
-    //HANDLE SOUND
-
-    BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
-
-    musicBoat = new BABYLON.Sound("boatSong", "audio/boat_song.wav", scene, null, {
-        loop: true,
-        autoplay: false,
-        volume: 0.3
-    });
-
     document.addEventListener("keydown", function (e) {
         switch (e.keyCode) {
             case 90:
                 if (musicBoat.isPlaying === false) {
-                    musicBoat.play()
+                    
                     BABYLON.Engine.audioEngine.unlock();
+                    musicBoat.play()
                 }
                 break;
         }
@@ -381,11 +403,9 @@ var createScene = function () {
                 break;
         }
 
-
-
-
     });
 
+    alpha=0
 
     scene.registerBeforeRender(function () {
 
