@@ -253,12 +253,12 @@ const gameOver = (scene) => {
 
     buttonRestart.onPointerClickObservable.add(() => {
         scene.dispose()
+        scene=undefined
         timer = 0
         textTimer.color = "yellow"
         numberCheckPointPassed = 0
         limitZ = 3500
         scene = createScene()
-
     });
 
 
@@ -315,7 +315,7 @@ const win = () => {
             numberCheckPointPassed = 0
             limitZ = 3500
             scene = createScene()
-
+           
         });
 
     }
@@ -343,10 +343,28 @@ var createScene = function () {
     displayGUI(textPassed, scene)
     engine.displayLoadingUI()
 
+     // Add the action manager of babylon to handle keypad
+     scene.actionManager = new BABYLON.ActionManager(scene);
+
+     
+
     if (scene.onPointerObservable.hasObservers()) {
         scene.onPointerObservable.add((pointerInfo) => {
             switch (pointerInfo.type) {
                 case BABYLON.PointerEventTypes.POINTERDOWN:
+                    var actionKeyup = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+                        map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+                
+                    });
+                
+                    var actionKeydown = scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+                        map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+                    }));
+                
+                    scene.actionManager.registerAction(actionKeyup)
+                
+                    scene.actionManager.registerAction(actionKeydown)
+               
                     textStart.dispose()
                     startSound.play()
                     buttonClickSound.play()
@@ -412,24 +430,6 @@ var createScene = function () {
     waterMesh.material = waterMaterial;
     waterMaterial.addToRenderList(ground);
     waterMaterial.addToRenderList(skybox);
-
-
-    // Add the action manager of babylon to handle keypad
-    scene.actionManager = new BABYLON.ActionManager(scene);
-
-    var actionKeyup = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
-        map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
-
-    });
-
-    var actionKeydown = scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
-        map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
-    }));
-
-    scene.actionManager.registerAction(actionKeyup)
-
-    scene.actionManager.registerAction(actionKeydown)
-
 
 
     /***** CUSTOM LIGHT  ******/
@@ -573,8 +573,6 @@ var createScene = function () {
 
     }
 
-
-    console.log(decor)
 
     /****** Import from blender other mesh ******/
 
