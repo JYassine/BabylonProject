@@ -9,12 +9,38 @@ var musicBoat;
 var musicSucceedCheckPoint;
 var musicWind;
 
+// keypad
+var map = {}; //object for multiple key presses
+
+//Sound
+var buttonClickSound;
+var startSound;
+var soundCrash;
+var soundClockUrgent;
+
+//collision
+var collisionWithLimit = false
+
 // checkpoint
 var numberCheckPoint = 5
 var numberCheckPointPassed = 0
+// function interval
+var timerInterval;
+
+// gui 
+var advancedTexture;
 
 // gui text
 var textPassed = new BABYLON.GUI.TextBlock();
+var textStart = new BABYLON.GUI.TextBlock();
+var textTimer = new BABYLON.GUI.TextBlock();
+var timer = 0;
+var maxTime = 40
+
+// limit game
+
+var limitZ = 3500
+var limitX=800
 
 // LOADING SCREEN
 BABYLON.DefaultLoadingScreen.prototype.displayLoadingUI = function () {
@@ -49,7 +75,7 @@ BABYLON.DefaultLoadingScreen.prototype.hideLoadingUI = function () {
 }
 
 const displayGUI = (textPassed, scene) => {
-    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
     var rect1 = new BABYLON.GUI.Rectangle();
     rect1.adaptWidthToChildren = true;
@@ -59,13 +85,36 @@ const displayGUI = (textPassed, scene) => {
     rect1.color = "Orange";
     rect1.thickness = 4;
     rect1.background = "green";
-    advancedTexture.addControl(rect1);
     rect1.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    advancedTexture.addControl(rect1);
+
+    textStart.text = "Click anywhere to START ! You have " + maxTime + " seconds to finish ! ";
+    textStart.color = "RED";
+    textStart.fontSize = 48;
+    textStart.fontWeight = "bold"
+    advancedTexture.addControl(textStart);
+
+
+    var rectTimer = new BABYLON.GUI.Rectangle();
+    rectTimer.adaptWidthToChildren = true;
+    rectTimer.height = "40px";
+    rectTimer.width = "200px"
+    rectTimer.cornerRadius = 20;
+    rectTimer.color = "Orange";
+    rectTimer.thickness = 4;
+    rectTimer.background = "green";
+    rectTimer.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP
+    rectTimer.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT
+    advancedTexture.addControl(rectTimer);
 
     textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
     textPassed.color = "white";
     textPassed.fontSize = 24;
     rect1.addControl(textPassed);
+
+    textTimer.text = "Time : " + timer;
+
+    rectTimer.addControl(textTimer);
 
 
     var meContMoveBtnWidth = "40px";
@@ -160,15 +209,128 @@ const displayGUI = (textPassed, scene) => {
 
 }
 
+const gameOver = (scene) => {
+
+    
+    map["z"] = false;
+    map["q"] = false;
+    map["d"] = false;
+    soundClockUrgent.stop()
+    clearInterval(timerInterval)
+
+    var panel = new BABYLON.GUI.StackPanel();
+    advancedTexture.addControl(panel);
+
+
+    var rectGameOver = new BABYLON.GUI.Rectangle();
+    rectGameOver.adaptWidthToChildren = true;
+    rectGameOver.height = "40px";
+    rectGameOver.width = "200px"
+    rectGameOver.cornerRadius = 20;
+    rectGameOver.color = "Orange";
+    rectGameOver.thickness = 4;
+    rectGameOver.background = "green";
+    rectGameOver.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER
+    panel.addControl(rectGameOver);
+
+
+    var textLoser = new BABYLON.GUI.TextBlock()
+    textLoser.text = "You lose !"
+    textLoser.color = "white";
+    textLoser.fontSize = 24;
+    rectGameOver.addControl(textLoser);
+
+    var buttonRestart = BABYLON.GUI.Button.CreateSimpleButton("gameOver", "RESTART !");
+    buttonRestart.width = 0.2;
+    buttonRestart.height = "40px";
+    buttonRestart.color = "white";
+    buttonRestart.background = "green";
+    panel.addControl(buttonRestart);
+
+    for (i = 0; i < scene.actionManager.actions.length; i++) {
+        scene.actionManager.actions.pop()
+    }
+
+    buttonRestart.onPointerClickObservable.add(() => {
+        scene.dispose()
+        timer = 0
+        textTimer.color = "yellow"
+        numberCheckPointPassed = 0
+        limitZ = 3500
+        scene = createScene()
+
+    });
+
+
+
+}
+
+const win = () => {
+    
+    if (numberCheckPointPassed === numberCheckPoint) {
+        
+        map["z"] = false;
+        map["q"] = false;
+        map["d"] = false;
+        soundClockUrgent.stop()
+        clearInterval(timerInterval)
+
+        var panel = new BABYLON.GUI.StackPanel();
+        advancedTexture.addControl(panel);
+
+
+        var rectWin = new BABYLON.GUI.Rectangle();
+        rectWin.adaptWidthToChildren = true;
+        rectWin.height = "40px";
+        rectWin.width = "200px"
+        rectWin.cornerRadius = 20;
+        rectWin.color = "Orange";
+        rectWin.thickness = 4;
+        rectWin.background = "green";
+        rectWin.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER
+        panel.addControl(rectWin);
+
+
+        var textWin = new BABYLON.GUI.TextBlock()
+        textWin.text = "You win !"
+        textWin.color = "white";
+        textWin.fontSize = 24;
+        rectWin.addControl(textWin);
+
+        var buttonRestart = BABYLON.GUI.Button.CreateSimpleButton("winner", "RESTART !");
+        buttonRestart.width = 0.2;
+        buttonRestart.height = "40px";
+        buttonRestart.color = "white";
+        buttonRestart.background = "green";
+        panel.addControl(buttonRestart);
+
+        for (i = 0; i < scene.actionManager.actions.length; i++) {
+            scene.actionManager.actions.pop()
+        }
+
+        buttonRestart.onPointerClickObservable.add(() => {
+            scene.dispose()
+            timer = 0
+            textTimer.color = "yellow"
+            numberCheckPointPassed = 0
+            limitZ = 3500
+            scene = createScene()
+
+        });
+
+    }
+
+}
+
 
 var createScene = function () {
     var scene = new BABYLON.Scene(engine);
-    
+
     var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
     var physicsPlugin = new BABYLON.CannonJSPlugin();
     scene.enablePhysics(gravityVector, physicsPlugin);
     scene.collisionsEnabled = true;
-    
+
     // Parameters : name, position, scene
     var camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(0, 0, -10), scene);
 
@@ -181,6 +343,32 @@ var createScene = function () {
     displayGUI(textPassed, scene)
     engine.displayLoadingUI()
 
+    if (scene.onPointerObservable.hasObservers()) {
+        scene.onPointerObservable.add((pointerInfo) => {
+            switch (pointerInfo.type) {
+                case BABYLON.PointerEventTypes.POINTERDOWN:
+                    textStart.dispose()
+                    startSound.play()
+                    buttonClickSound.play()
+                    scene.onPointerObservable.remove(scene.onPointerObservable.observers[2])
+                    timerInterval = window.setInterval(() => {
+                        timer++;
+                        textTimer.text = "Timer : " + timer;
+                        if (timer > maxTime - 10) {
+                            soundClockUrgent.play(0, 0, 0.3)
+                            textTimer.color = "red"
+                        }
+                        if (timer > maxTime - 1) {
+                            gameOver(scene)
+                        }
+                    }, 1000);
+
+                    break;
+            }
+        });
+    }
+
+
     // Light
     var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 1), scene);
 
@@ -188,7 +376,7 @@ var createScene = function () {
     var skybox = BABYLON.Mesh.CreateBox("skyBox", 10000.0, scene);
     var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("//www.babylonjs.com/assets/skybox/TropicalSunnyDay", scene);
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("./textures/background/TropicalSunnyDay", scene);
     skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
     skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
     skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
@@ -197,7 +385,7 @@ var createScene = function () {
 
     // Water material
     var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", scene, new BABYLON.Vector2(512, 512));
-    waterMaterial.bumpTexture = new BABYLON.Texture("//www.babylonjs.com/assets/waterbump.png", scene);
+    waterMaterial.bumpTexture = new BABYLON.Texture("./textures/waterbump.png", scene);
     waterMaterial.windForce = -10;
     waterMaterial.waveHeight = 0.2;
     waterMaterial.bumpHeight = 0.1;
@@ -208,7 +396,7 @@ var createScene = function () {
     waterMaterial.colorBlendFactor = 0;
 
     // Ground
-    var groundTexture = new BABYLON.Texture("//www.babylonjs.com/assets/sand.jpg", scene);
+    var groundTexture = new BABYLON.Texture("./textures/sand.jpg", scene);
     groundTexture.vScale = groundTexture.uScale = 4.0;
 
     var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
@@ -227,17 +415,22 @@ var createScene = function () {
 
 
     // Add the action manager of babylon to handle keypad
-    var map = {}; //object for multiple key presses
     scene.actionManager = new BABYLON.ActionManager(scene);
 
-    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+    var actionKeyup = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
         map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
 
-    }));
+    });
 
-    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+    var actionKeydown = scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
         map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
     }));
+
+    scene.actionManager.registerAction(actionKeyup)
+
+    scene.actionManager.registerAction(actionKeydown)
+
+
 
     /***** CUSTOM LIGHT  ******/
     BABYLON.Effect.ShadersStore["customVertexShader"] = 'precision highp float;  attribute vec3 position; attribute vec3 normal; attribute vec2 uv;  uniform mat4 worldViewProjection; uniform float time;  varying vec3 vPosition; varying vec3 vNormal; varying vec2 vUV;  void main(void) {     vec3 v = position;     gl_Position = worldViewProjection * vec4(v, 1.0);     vPosition = position;     vNormal = normal;     vUV = uv; }';
@@ -279,18 +472,18 @@ var createScene = function () {
 
     /******** Create checkpoints *******/
     var checkpoints = []
-    baseFirstCheckPoint = -2000
+    baseFirstCheckPoint = -300
     for (i = 0; i < numberCheckPoint; i++) {
         var checkPoint = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 600, tessellation: 96 }, scene);
 
         checkPoint.position.z = baseFirstCheckPoint
-        if (i >= 2) {
-            checkPoint.position.x = getRandomInt(200)
+        if (i >= 1) {
+            checkPoint.position.x = getRandomInt(600)
         }
         checkPoint.material = checkPointLight;
         checkPoint.checkCollisions = true
         checkpoints.push(checkPoint)
-        baseFirstCheckPoint += 1000
+        baseFirstCheckPoint += 500
 
     }
 
@@ -317,17 +510,81 @@ var createScene = function () {
         volume: 1
     });
 
-    
+    startSound = new BABYLON.Sound("wind", "audio/lets_go.mp3", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 3
+    });
+
+
+    buttonClickSound = new BABYLON.Sound("wind", "audio/button_click.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 2
+    });
+
+    soundCrash = new BABYLON.Sound("wind", "audio/crash.mp3", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 4
+    });
+
+    soundClockUrgent = new BABYLON.Sound("wind", "audio/tick_tock.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 3
+    });
+
+
+
+    var limitp=0
+
+    /****CREATE LIMIT OF THE GAME *********/
+    var decor = []
+    for (i = 0; i < 200; i++) {
+        var limitPlane = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+        limitPlane.position.y = 10
+        limitPlane.position.z = limitZ
+        limitPlane.position.x =limitX
+
+        var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+        myMaterial.diffuseTexture = new BABYLON.Texture("./textures/rock.jpg", scene);
+        limitPlane.material = myMaterial;
+
+        var limitPlane2 = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+        limitPlane2.position.y = 10
+        limitPlane2.position.z = limitZ
+        limitPlane2.position.x = -limitX
+        limitPlane2.material = myMaterial
+
+        var limitPlane3 = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+        limitPlane3.position.y = 10
+        limitPlane3.position.z = -1000
+        limitPlane3.position.x = 1000+limitp
+        limitPlane3.material = myMaterial
+
+        decor.push(limitPlane)
+        decor.push(limitPlane2)
+        decor.push(limitPlane3)
+        
+        limitZ -= 40
+        limitp-=40
+        
+
+    }
+
+
+    console.log(decor)
 
     /****** Import from blender other mesh ******/
 
-    var box = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
-    box.checkCollisions = true
-    box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0 }, scene);
-    box.isVisible = false
+    var boxCollider = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+    boxCollider.checkCollisions = true
+    boxCollider.physicsImpostor = new BABYLON.PhysicsImpostor(boxCollider, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0 }, scene);
+    boxCollider.isVisible = false
 
-    BABYLON.SceneLoader.ImportMesh("", "./", "boat.glb", scene, function (newMeshes) {
-       
+    BABYLON.SceneLoader.ImportMesh("", "./model/", "boat.glb", scene, function (newMeshes) {
+
         scene.executeWhenReady(function () {
 
             scene.activeCamera.attachControl(canvas);
@@ -338,8 +595,8 @@ var createScene = function () {
             newMeshes[0].scaling.z = 0.4
             newMeshes[0].actionManager = new BABYLON.ActionManager(scene);
             newMeshes[0].checkCollisions = true
-    
-    
+
+
             /**** HANDLE COLLISION WITH CHECKPOINT *****/
             checkpoints.forEach(checkP => {
                 newMeshes[0].actionManager.registerAction(
@@ -351,34 +608,56 @@ var createScene = function () {
                         function () {
                             checkP.dispose()
                             musicSucceedCheckPoint.play()
-                            setTimeout(()=>{musicSucceedCheckPoint.stop()},900)
+                            setTimeout(() => { musicSucceedCheckPoint.stop() }, 900)
                             numberCheckPointPassed += 1
                             textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
+                            win()
 
                         }
                     )
                 );
             })
-            /*var box2 = new BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 15, diameterX: 15 }, scene);
-            box2.checkCollisions = true
-            box2.position.y = 20
-            box2.position.z = 2800
-            box2.physicsImpostor = new BABYLON.PhysicsImpostor(box2, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, friction: 0, restitution: 0 }, scene);
-            */
-            box.position.y = newMeshes[0].position.y
-            box.position.z = newMeshes[0].position.z
-            box.position.x = newMeshes[0].position.x
-    
+            boxCollider.position.y = newMeshes[0].position.y
+            boxCollider.position.z = newMeshes[0].position.z
+            boxCollider.position.x = newMeshes[0].position.x
+
             waterMaterial.addToRenderList(newMeshes[0]);
             bigBoat = newMeshes
-           
-          
-            scene.activeCamera.attachControl(canvas); 
-            engine.hideLoadingUI()       
-            engine.runRenderLoop(function () {           
-                scene.render();        
-            });   
-       });
+
+
+            // HANDLE COLLISION WITH LIMIT 
+            decor.forEach(meshDecor => {
+                newMeshes[0].actionManager.registerAction(new BABYLON.ExecuteCodeAction({
+                    trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
+                    parameter: meshDecor
+                }, function () {
+                    if (newMeshes[0].position.x < 0) {
+                        newMeshes[0].position.subtractInPlace(new BABYLON.Vector3(-10, 0, 0));
+                    } else {
+                        newMeshes[0].position.subtractInPlace(new BABYLON.Vector3(10, 0, 0));
+                    }
+                    textTimer.color = "red"
+                    collisionWithLimit = true
+                    soundCrash.play()
+                    timer += 1
+                }));
+
+                newMeshes[0].actionManager.registerAction(new BABYLON.ExecuteCodeAction({
+                    trigger: BABYLON.ActionManager.OnIntersectionExitTrigger,
+                    parameter: meshDecor
+                }, function () {
+                    collisionWithLimit = false
+                    setTimeout(() => { textTimer.color = "yellow" }, 500);
+                }));
+            });
+
+
+            scene.activeCamera.attachControl(canvas);
+            engine.hideLoadingUI()
+            engine.runRenderLoop(function () {
+                scene.render();
+            });
+        });
 
     });
 
@@ -386,7 +665,7 @@ var createScene = function () {
         switch (e.keyCode) {
             case 90:
                 if (musicBoat.isPlaying === false) {
-                    
+
                     BABYLON.Engine.audioEngine.unlock();
                     musicBoat.play()
                 }
@@ -405,15 +684,13 @@ var createScene = function () {
 
     });
 
-    alpha=0
-
     scene.registerBeforeRender(function () {
 
         if (bigBoat != undefined) {
             bigBoat.checkCollisions = true
-            box.position.y = bigBoat[0].position.y + 10
-            box.position.z = bigBoat[0].position.z
-            box.position.x = bigBoat[0].position.x
+            boxCollider.position.y = bigBoat[0].position.y + 10
+            boxCollider.position.z = bigBoat[0].position.z
+            boxCollider.position.x = bigBoat[0].position.x
             camera.position.copyFrom(bigBoat[0].position.subtract(bigBoat[0].forward.scale(40)).add(new BABYLON.Vector3(0, 1.2, 0)))
             camera.setTarget(new BABYLON.Vector3(bigBoat[0].position.x, bigBoat[0].position.y, bigBoat[0].position.z))
             camera.position.y = 15
@@ -422,8 +699,8 @@ var createScene = function () {
     });
 
     scene.registerAfterRender(function () {
-        if ((map["z"] || map["Z"])) {
 
+        if ((map["z"] || map["Z"]) && collisionWithLimit == false) {
             dir = bigBoat[0].getDirection(new BABYLON.Vector3(0, 0, 8))
             bigBoat[0].position.x += dir.x
             bigBoat[0].position.z += dir.z
@@ -447,7 +724,7 @@ var createScene = function () {
     });
 
 
-    
+
     return scene;
 }
 
