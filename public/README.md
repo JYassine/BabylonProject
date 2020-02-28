@@ -15,7 +15,10 @@ For a long time there’s a place that no one knows... a place hidden by the FBI
 <kbd>D</kbd> : turn right
 
 ## URL OF THE GAME
+
 http://babylonseascape.livehost.fr
+
+the game works well on firefox but if you use google chrome you can encounter some problems on audio
 
 
 ## Video showing the gameplay of the game
