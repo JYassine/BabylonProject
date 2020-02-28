@@ -1,25 +1,23 @@
-# How to install
-Here are the steps to follow to use the installer locally.
+# SeaScape 
+Participants :
+Jrad Yassine
+Otmane Rahim	
+Kevin Alessandro
 
-## Copy
-Copy the executable from the zip file on your local drive.
+# Story
 
-## Admin Mode
-In order to use the installer, as it will have to modify files in you program files folder, you need to run the application in admin mode.
+For a long time there’s a place that no one knows... a place hidden by the FBI and the government... This place was named... "SeaScape". This place serves as an experience to find future talented boat pilots ! You are among those who pass the test, several levels and obstacles await you to show that piloting a boat is child's play for you ! Can you get through all the hurdles or are you just afraid of failure ?
 
-To run in administrator mode, simply right click the exe, navigate to the compatibility tab and select the run this program as an administrator checkbox.
+## How to play ?
 
-I know this might sound scary but this is the only way we can deploy the required dll in you program files folder. In case you prefer to deploy manually, you can still find all the built libraries in the Github releases assets.
+<kbd>Z</kbd> : move forward
+<kbd>Q</kbd> : turn left
+<kbd>D</kbd> : turn right
 
-# How to use
-You can now launch the tool \o/
+## URL OF THE GAME
+http://babylonseascape.livehost.fr
 
-Once launched, it will show you for both Max/Maya and their different respective versions, the currently installed exporter version.
 
-You can then easily install the latest available version or uninstall the plugin.
+## Video showing the gameplay of the game
 
-## Plugin not found
-If the software (3ds Max or Maya) was not automatically found, you can easily relocate the installation folder by pressing the (re)locate button. Just locate the root of the installation. At this point, the software will automatically search for the exporter.
-
-## Quick Update
-The update all button is the way to go and will install / update the exporter for all the applications found on your system at once.
+https://youtu.be/BfhYcv2lIk8

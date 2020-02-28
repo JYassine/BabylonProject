@@ -8,15 +8,17 @@ var dynamicTerrain;
 var musicBoat;
 var musicSucceedCheckPoint;
 var musicWind;
+var musicBackground;
 
 // keypad
 var map = {}; //object for multiple key presses
 
 //Sound
 var buttonClickSound;
-var startSound;
 var soundCrash;
 var soundClockUrgent;
+var winSong;
+var loseSong;
 
 //collision
 var collisionWithLimit = false
@@ -211,11 +213,12 @@ const displayGUI = (textPassed, scene) => {
 
 const gameOver = (scene) => {
 
-    
+    loseSong.play()
+    musicBackground.stop()
+    soundClockUrgent.stop()
     map["z"] = false;
     map["q"] = false;
     map["d"] = false;
-    soundClockUrgent.stop()
     clearInterval(timerInterval)
 
     var panel = new BABYLON.GUI.StackPanel();
@@ -229,7 +232,7 @@ const gameOver = (scene) => {
     rectGameOver.cornerRadius = 20;
     rectGameOver.color = "Orange";
     rectGameOver.thickness = 4;
-    rectGameOver.background = "green";
+    rectGameOver.background = "red";
     rectGameOver.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER
     panel.addControl(rectGameOver);
 
@@ -267,13 +270,17 @@ const gameOver = (scene) => {
 
 const win = () => {
     
+    
     if (numberCheckPointPassed === numberCheckPoint) {
+        
+        musicBackground.stop()
         
         map["z"] = false;
         map["q"] = false;
         map["d"] = false;
         soundClockUrgent.stop()
         clearInterval(timerInterval)
+        winSong.play()
 
         var panel = new BABYLON.GUI.StackPanel();
         advancedTexture.addControl(panel);
@@ -310,6 +317,7 @@ const win = () => {
 
         buttonRestart.onPointerClickObservable.add(() => {
             scene.dispose()
+            scene=undefined
             timer = 0
             textTimer.color = "yellow"
             numberCheckPointPassed = 0
@@ -324,6 +332,7 @@ const win = () => {
 
 
 var createScene = function () {
+    
     var scene = new BABYLON.Scene(engine);
 
     var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
@@ -342,16 +351,19 @@ var createScene = function () {
 
     displayGUI(textPassed, scene)
     engine.displayLoadingUI()
+    
 
      // Add the action manager of babylon to handle keypad
      scene.actionManager = new BABYLON.ActionManager(scene);
-
-     
-
+        
     if (scene.onPointerObservable.hasObservers()) {
         scene.onPointerObservable.add((pointerInfo) => {
             switch (pointerInfo.type) {
                 case BABYLON.PointerEventTypes.POINTERDOWN:
+                    
+                    BABYLON.Engine.audioEngine.unlock();
+                    
+                    buttonClickSound.play()
                     var actionKeyup = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
                         map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
                 
@@ -360,14 +372,12 @@ var createScene = function () {
                     var actionKeydown = scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
                         map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
                     }));
-                
+                    
                     scene.actionManager.registerAction(actionKeyup)
                 
                     scene.actionManager.registerAction(actionKeydown)
                
                     textStart.dispose()
-                    startSound.play()
-                    buttonClickSound.play()
                     scene.onPointerObservable.remove(scene.onPointerObservable.observers[2])
                     timerInterval = window.setInterval(() => {
                         timer++;
@@ -489,7 +499,6 @@ var createScene = function () {
 
     /********** HANDLE SOUND **********/
 
-    BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
 
     musicBoat = new BABYLON.Sound("boatSong", "audio/boat_song.wav", scene, null, {
         loop: true,
@@ -507,29 +516,40 @@ var createScene = function () {
     musicWind = new BABYLON.Sound("wind", "audio/wind.wav", scene, null, {
         loop: true,
         autoplay: true,
-        volume: 1
+        volume: 0.6
     });
 
-    startSound = new BABYLON.Sound("wind", "audio/lets_go.mp3", scene, null, {
-        loop: false,
-        autoplay: false,
-        volume: 3
+    musicBackground = new BABYLON.Sound("musicBg", "audio/music_bg.mp3", scene, null, {
+        loop: true,
+        autoplay: true,
+        volume: 2
     });
 
-
-    buttonClickSound = new BABYLON.Sound("wind", "audio/button_click.wav", scene, null, {
+    buttonClickSound = new BABYLON.Sound("click", "audio/button_click.wav", scene, null, {
         loop: false,
         autoplay: false,
         volume: 2
     });
 
-    soundCrash = new BABYLON.Sound("wind", "audio/crash.mp3", scene, null, {
+    soundCrash = new BABYLON.Sound("crash", "audio/crash.mp3", scene, null, {
         loop: false,
         autoplay: false,
         volume: 4
     });
 
-    soundClockUrgent = new BABYLON.Sound("wind", "audio/tick_tock.wav", scene, null, {
+    soundClockUrgent = new BABYLON.Sound("clock", "audio/tick_tock.wav", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 3
+    });
+
+    winSong = new BABYLON.Sound("winner", "audio/win.mp3", scene, null, {
+        loop: false,
+        autoplay: false,
+        volume: 3
+    });
+
+    loseSong = new BABYLON.Sound("winner", "audio/fail_sound.mp3", scene, null, {
         loop: false,
         autoplay: false,
         volume: 3
@@ -621,7 +641,7 @@ var createScene = function () {
 
             waterMaterial.addToRenderList(newMeshes[0]);
             bigBoat = newMeshes
-
+            
 
             // HANDLE COLLISION WITH LIMIT 
             decor.forEach(meshDecor => {
@@ -649,7 +669,7 @@ var createScene = function () {
                 }));
             });
 
-
+            
             scene.activeCamera.attachControl(canvas);
             engine.hideLoadingUI()
             engine.runRenderLoop(function () {
@@ -658,19 +678,20 @@ var createScene = function () {
         });
 
     });
+    
+    BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
+                        
 
     document.addEventListener("keydown", function (e) {
         switch (e.keyCode) {
             case 90:
-                if (musicBoat.isPlaying === false) {
-
-                    BABYLON.Engine.audioEngine.unlock();
+                if (!musicBoat.isPlaying) {
                     musicBoat.play()
                 }
                 break;
         }
-    });
 
+    });
     document.addEventListener("keyup", function (e) {
         switch (e.keyCode) {
             case 90:
@@ -699,6 +720,7 @@ var createScene = function () {
     scene.registerAfterRender(function () {
 
         if ((map["z"] || map["Z"]) && collisionWithLimit == false) {
+           
             dir = bigBoat[0].getDirection(new BABYLON.Vector3(0, 0, 8))
             bigBoat[0].position.x += dir.x
             bigBoat[0].position.z += dir.z
