@@ -1,9 +1,14 @@
+import BabylonGUI from "./gui/BabylonGUI.js";
+import GuiGame from "./gui/GuiGame.js";
+import Utilities from "./utilities/Utilities.js"
+
+
 var canvas = document.getElementById('renderCanvas');
 var engine = new BABYLON.Engine(canvas, true)
 // OUR BOAT
 var bigBoat;
-// THE DYNAMIC TERRAIN
-var dynamicTerrain;
+
+var baseFirstCheckPoint;
 //MUSIC
 var musicBoat;
 var musicSucceedCheckPoint;
@@ -30,7 +35,8 @@ var numberCheckPointPassed = 0
 var timerInterval;
 
 // gui 
-var advancedTexture;
+
+var babylonGUI = new BabylonGUI(BABYLON.GUI)
 
 // gui text
 var textPassed = new BABYLON.GUI.TextBlock();
@@ -44,175 +50,8 @@ var maxTime = 40
 var limitZ = 3500
 var limitX=800
 
-// LOADING SCREEN
-BABYLON.DefaultLoadingScreen.prototype.displayLoadingUI = function () {
-    if (document.getElementById("customLoadingScreenDiv")) {
-        // Do not add a loading screen if there is already one
-        document.getElementById("customLoadingScreenDiv").style.display = "initial";
-        return;
-    }
-    this._loadingDiv = document.createElement("div");
-    this._loadingDiv.id = "customLoadingScreenDiv";
-    this._loadingDiv.innerHTML = "Scene is loading...";
-
-
-    var customLoadingScreenCss = document.createElement('style');
-    customLoadingScreenCss.type = 'text/css';
-    customLoadingScreenCss.innerHTML = `
-    #customLoadingScreenDiv{
-        background-color: #000000;
-        color: white;
-        font-size:50px;
-        text-align:center;
-    }
-    `;
-    document.getElementsByTagName('head')[0].appendChild(customLoadingScreenCss);
-    this._resizeLoadingUI();
-    window.addEventListener("resize", this._resizeLoadingUI);
-    document.body.appendChild(this._loadingDiv);
-};
-
-BABYLON.DefaultLoadingScreen.prototype.hideLoadingUI = function () {
-    document.getElementById("customLoadingScreenDiv").style.display = "none";
-}
-
-const displayGUI = (textPassed, scene) => {
-    advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
-    var rect1 = new BABYLON.GUI.Rectangle();
-    rect1.adaptWidthToChildren = true;
-    rect1.height = "40px";
-    rect1.width = "200px"
-    rect1.cornerRadius = 20;
-    rect1.color = "Orange";
-    rect1.thickness = 4;
-    rect1.background = "green";
-    rect1.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-    advancedTexture.addControl(rect1);
-
-    textStart.text = "Click anywhere to START ! You have " + maxTime + " seconds to finish ! ";
-    textStart.color = "RED";
-    textStart.fontSize = 48;
-    textStart.fontWeight = "bold"
-    advancedTexture.addControl(textStart);
-
-
-    var rectTimer = new BABYLON.GUI.Rectangle();
-    rectTimer.adaptWidthToChildren = true;
-    rectTimer.height = "40px";
-    rectTimer.width = "200px"
-    rectTimer.cornerRadius = 20;
-    rectTimer.color = "Orange";
-    rectTimer.thickness = 4;
-    rectTimer.background = "green";
-    rectTimer.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP
-    rectTimer.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT
-    advancedTexture.addControl(rectTimer);
-
-    textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
-    textPassed.color = "white";
-    textPassed.fontSize = 24;
-    rect1.addControl(textPassed);
-
-    textTimer.text = "Time : " + timer;
-
-    rectTimer.addControl(textTimer);
-
-
-    var meContMoveBtnWidth = "40px";
-    var meContMoveBtnHeight = "40px";
-
-    var style = advancedTexture.createStyle();
-    style.fontSize = 20;
-    style.fontFamily = "Arial, Helvetica, sans-serif";
-    style.fontWeight = "bold";
-
-    var menuContainerMove = new BABYLON.GUI.Rectangle()
-    menuContainerMove.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-    menuContainerMove.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-    menuContainerMove.width = "100px";
-    menuContainerMove.height = "100px";
-    advancedTexture.addControl(menuContainerMove);
-
-    var menuContainerMoveGrid = new BABYLON.GUI.Grid();
-    menuContainerMove.addControl(menuContainerMoveGrid);
-
-
-    menuContainerMoveGrid.addColumnDefinition(0, false);
-    menuContainerMoveGrid.addColumnDefinition(0.3);
-    menuContainerMoveGrid.addColumnDefinition(0.3);
-    menuContainerMoveGrid.addColumnDefinition(0.3);
-    menuContainerMoveGrid.addColumnDefinition(0, false);
-    menuContainerMoveGrid.addRowDefinition(0.3);
-    menuContainerMoveGrid.addRowDefinition(0.3);
-    menuContainerMoveGrid.addRowDefinition(0.3);
-
-
-    var buttonZ = BABYLON.GUI.Button.CreateSimpleButton("Z", "Z");
-    buttonZ.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    buttonZ.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-    buttonZ.width = meContMoveBtnWidth;
-    buttonZ.height = meContMoveBtnHeight;
-    buttonZ.background = "red";
-    buttonZ.style = style;
-
-    menuContainerMoveGrid.addControl(buttonZ, 0, 2);
-
-
-    var buttonQ = BABYLON.GUI.Button.CreateSimpleButton("Q", "Q");
-    buttonQ.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    buttonQ.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
-    buttonQ.width = meContMoveBtnWidth;
-    buttonQ.height = meContMoveBtnHeight;
-    buttonQ.background = "red";
-    buttonQ.style = style;
-
-    menuContainerMoveGrid.addControl(buttonQ, 2, 1);
-
-    var buttonD = BABYLON.GUI.Button.CreateSimpleButton("D", "D");
-    buttonD.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    buttonD.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-    buttonD.width = meContMoveBtnWidth;
-    buttonD.height = meContMoveBtnHeight;
-    buttonD.background = "red";
-    buttonD.style = style;
-    menuContainerMoveGrid.addControl(buttonD, 2, 3);
-
-    document.addEventListener("keydown", function (e) {
-        switch (e.keyCode) {
-            case 90:
-                buttonZ.background = "green";
-                break;
-            case 81:
-                buttonQ.background = "green";
-                break;
-            case 68:
-                buttonD.background = "green";
-                break;
-
-
-        }
-    });
-
-    document.addEventListener("keyup", function (e) {
-        switch (e.keyCode) {
-            case 90:
-                buttonZ.background = "red";
-                break;
-            case 81:
-                buttonQ.background = "red";
-                break;
-            case 68:
-                buttonD.background = "red";
-                break;
-        }
-
-    });
-
-}
 
 const gameOver = (scene) => {
-
     loseSong.play()
     musicBackground.stop()
     soundClockUrgent.stop()
@@ -222,7 +61,7 @@ const gameOver = (scene) => {
     clearInterval(timerInterval)
 
     var panel = new BABYLON.GUI.StackPanel();
-    advancedTexture.addControl(panel);
+     babylonGUI.add(panel);
 
 
     var rectGameOver = new BABYLON.GUI.Rectangle();
@@ -250,7 +89,7 @@ const gameOver = (scene) => {
     buttonRestart.background = "green";
     panel.addControl(buttonRestart);
 
-    for (i = 0; i < scene.actionManager.actions.length; i++) {
+    for (let i = 0; i < scene.actionManager.actions.length; i++) {
         scene.actionManager.actions.pop()
     }
 
@@ -272,9 +111,7 @@ const win = () => {
     
     
     if (numberCheckPointPassed === numberCheckPoint) {
-        
         musicBackground.stop()
-        
         map["z"] = false;
         map["q"] = false;
         map["d"] = false;
@@ -283,7 +120,7 @@ const win = () => {
         winSong.play()
 
         var panel = new BABYLON.GUI.StackPanel();
-        advancedTexture.addControl(panel);
+        babylonGUI.add(panel);
 
 
         var rectWin = new BABYLON.GUI.Rectangle();
@@ -311,7 +148,7 @@ const win = () => {
         buttonRestart.background = "green";
         panel.addControl(buttonRestart);
 
-        for (i = 0; i < scene.actionManager.actions.length; i++) {
+        for (let i = 0; i < scene.actionManager.actions.length; i++) {
             scene.actionManager.actions.pop()
         }
 
@@ -322,6 +159,7 @@ const win = () => {
             textTimer.color = "yellow"
             numberCheckPointPassed = 0
             limitZ = 3500
+            babylonGUI.destroy()
             scene = createScene()
            
         });
@@ -340,6 +178,7 @@ var createScene = function () {
     scene.enablePhysics(gravityVector, physicsPlugin);
     scene.collisionsEnabled = true;
 
+
     // Parameters : name, position, scene
     var camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(0, 0, -10), scene);
 
@@ -348,8 +187,9 @@ var createScene = function () {
 
     // Attach the camera to the canvas
     camera.attachControl(canvas, true);
+    
 
-    displayGUI(textPassed, scene)
+    GuiGame.displayGUI(textPassed, babylonGUI,textStart,maxTime,numberCheckPointPassed,numberCheckPoint,textTimer,timer)
     engine.displayLoadingUI()
     
 
@@ -483,12 +323,12 @@ var createScene = function () {
     /******** Create checkpoints *******/
     var checkpoints = []
     baseFirstCheckPoint = -300
-    for (i = 0; i < numberCheckPoint; i++) {
+    for (let i = 0; i < numberCheckPoint; i++) {
         var checkPoint = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 600, tessellation: 96 }, scene);
 
         checkPoint.position.z = baseFirstCheckPoint
         if (i >= 1) {
-            checkPoint.position.x = getRandomInt(600)
+            checkPoint.position.x = Utilities.getRandomInt(600)
         }
         checkPoint.material = checkPointLight;
         checkPoint.checkCollisions = true
@@ -561,7 +401,7 @@ var createScene = function () {
 
     /****CREATE LIMIT OF THE GAME *********/
     var decor = []
-    for (i = 0; i < 200; i++) {
+    for (let i = 0; i < 200; i++) {
         var limitPlane = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
         limitPlane.position.y = 10
         limitPlane.position.z = limitZ
@@ -721,7 +561,7 @@ var createScene = function () {
 
         if ((map["z"] || map["Z"]) && collisionWithLimit == false) {
            
-            dir = bigBoat[0].getDirection(new BABYLON.Vector3(0, 0, 8))
+            let dir = bigBoat[0].getDirection(new BABYLON.Vector3(0, 0, 8))
             bigBoat[0].position.x += dir.x
             bigBoat[0].position.z += dir.z
             bigBoat.forEach(mesh => {
@@ -755,8 +595,4 @@ window.addEventListener('resize', function () {
     engine.resize();
 });
 
-/*** FUNCTION USED  ***/
 
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
