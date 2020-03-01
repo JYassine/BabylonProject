@@ -1,6 +1,8 @@
 import BabylonGUI from "./gui/BabylonGUI.js";
 import GuiGame from "./gui/GuiGame.js";
 import Utilities from "./utilities/Utilities.js"
+import AudioManagerBabylon from "./AudioManager/AudioManagerBabylon.js"
+import AudioGame from "./AudioManager/AudioGame.js"
 
 
 var canvas = document.getElementById('renderCanvas');
@@ -8,12 +10,11 @@ var engine = new BABYLON.Engine(canvas, true)
 // OUR BOAT
 var bigBoat;
 
+
 var baseFirstCheckPoint;
+
 //MUSIC
-var musicBoat;
-var musicSucceedCheckPoint;
-var musicWind;
-var musicBackground;
+var audioManager;
 
 // keypad
 var map = {}; //object for multiple key presses
@@ -52,9 +53,9 @@ var limitX=800
 
 
 const gameOver = (scene) => {
-    loseSong.play()
-    musicBackground.stop()
-    soundClockUrgent.stop()
+    audioManager.find("loserSong").play()
+    audioManager.find("backgroundSong").stop()
+    audioManager.find("clockSong").stop()
     map["z"] = false;
     map["q"] = false;
     map["d"] = false;
@@ -111,13 +112,16 @@ const win = () => {
     
     
     if (numberCheckPointPassed === numberCheckPoint) {
-        musicBackground.stop()
+        
+        audioManager.find("backgroundSong").stop()
         map["z"] = false;
         map["q"] = false;
         map["d"] = false;
-        soundClockUrgent.stop()
+        
+        audioManager.find("clockSong").stop()
         clearInterval(timerInterval)
-        winSong.play()
+        
+        audioManager.find("winnerSong").play()
 
         var panel = new BABYLON.GUI.StackPanel();
         babylonGUI.add(panel);
@@ -160,6 +164,7 @@ const win = () => {
             numberCheckPointPassed = 0
             limitZ = 3500
             babylonGUI.destroy()
+            
             scene = createScene()
            
         });
@@ -172,7 +177,6 @@ const win = () => {
 var createScene = function () {
     
     var scene = new BABYLON.Scene(engine);
-
     var gravityVector = new BABYLON.Vector3(0, -9.81, 0);
     var physicsPlugin = new BABYLON.CannonJSPlugin();
     scene.enablePhysics(gravityVector, physicsPlugin);
@@ -188,6 +192,7 @@ var createScene = function () {
     // Attach the camera to the canvas
     camera.attachControl(canvas, true);
     
+    audioManager = new AudioManagerBabylon(scene);
 
     GuiGame.displayGUI(textPassed, babylonGUI,textStart,maxTime,numberCheckPointPassed,numberCheckPoint,textTimer,timer)
     engine.displayLoadingUI()
@@ -203,7 +208,8 @@ var createScene = function () {
                     
                     BABYLON.Engine.audioEngine.unlock();
                     
-                    buttonClickSound.play()
+                    
+                    audioManager.find("clickSong").play()
                     var actionKeyup = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
                         map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
                 
@@ -223,7 +229,8 @@ var createScene = function () {
                         timer++;
                         textTimer.text = "Timer : " + timer;
                         if (timer > maxTime - 10) {
-                            soundClockUrgent.play(0, 0, 0.3)
+                            
+                            audioManager.find("clockSong").play(0, 0, 0.3)
                             textTimer.color = "red"
                         }
                         if (timer > maxTime - 1) {
@@ -339,61 +346,8 @@ var createScene = function () {
 
     /********** HANDLE SOUND **********/
 
-
-    musicBoat = new BABYLON.Sound("boatSong", "audio/boat_song.wav", scene, null, {
-        loop: true,
-        autoplay: false,
-        volume: 0.3
-    });
-
-
-    musicSucceedCheckPoint = new BABYLON.Sound("checkPoint", "audio/success_checkpoint.wav", scene, null, {
-        loop: true,
-        autoplay: false,
-        volume: 0.6
-    });
-
-    musicWind = new BABYLON.Sound("wind", "audio/wind.wav", scene, null, {
-        loop: true,
-        autoplay: true,
-        volume: 0.6
-    });
-
-    musicBackground = new BABYLON.Sound("musicBg", "audio/music_bg.mp3", scene, null, {
-        loop: true,
-        autoplay: true,
-        volume: 2
-    });
-
-    buttonClickSound = new BABYLON.Sound("click", "audio/button_click.wav", scene, null, {
-        loop: false,
-        autoplay: false,
-        volume: 2
-    });
-
-    soundCrash = new BABYLON.Sound("crash", "audio/crash.mp3", scene, null, {
-        loop: false,
-        autoplay: false,
-        volume: 4
-    });
-
-    soundClockUrgent = new BABYLON.Sound("clock", "audio/tick_tock.wav", scene, null, {
-        loop: false,
-        autoplay: false,
-        volume: 3
-    });
-
-    winSong = new BABYLON.Sound("winner", "audio/win.mp3", scene, null, {
-        loop: false,
-        autoplay: false,
-        volume: 3
-    });
-
-    loseSong = new BABYLON.Sound("winner", "audio/fail_sound.mp3", scene, null, {
-        loop: false,
-        autoplay: false,
-        volume: 3
-    });
+    
+    AudioGame.addAllSongs(audioManager)
 
 
 
@@ -465,8 +419,8 @@ var createScene = function () {
                         },
                         function () {
                             checkP.dispose()
-                            musicSucceedCheckPoint.play()
-                            setTimeout(() => { musicSucceedCheckPoint.stop() }, 900)
+                            audioManager.find("checkPointSong").play()
+                            setTimeout(() => {  audioManager.find("checkPointSong").stop() }, 900)
                             numberCheckPointPassed += 1
                             textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
                             win()
@@ -496,7 +450,7 @@ var createScene = function () {
                     }
                     textTimer.color = "red"
                     collisionWithLimit = true
-                    soundCrash.play()
+                    audioManager.find("crashSong").play()
                     timer += 1
                 }));
 
@@ -525,8 +479,9 @@ var createScene = function () {
     document.addEventListener("keydown", function (e) {
         switch (e.keyCode) {
             case 90:
-                if (!musicBoat.isPlaying) {
-                    musicBoat.play()
+                var boatSong = audioManager.find("boatSong")
+                if (!boatSong.isPlaying) {
+                    boatSong.play()
                 }
                 break;
         }
@@ -535,8 +490,10 @@ var createScene = function () {
     document.addEventListener("keyup", function (e) {
         switch (e.keyCode) {
             case 90:
-                if (musicBoat.isPlaying) {
-                    musicBoat.pause()
+                
+                var boatSong = audioManager.find("boatSong")
+                if (boatSong.isPlaying) {
+                    boatSong.pause()
                 }
                 break;
         }

@@ -10,6 +10,10 @@ export default class GUI {
         console.log("Adding element...")}
     destroy(){
         console.log("Destroying GUI...")}
+    decor(element,height,width,color ,thickness,background,style){}
+    decorText(text,color,fontSize,fontWeight){}
+    positionElement(element,verticalAlignment ,horizontalAlignment){}
+
 
 
 }
