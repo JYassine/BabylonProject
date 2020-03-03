@@ -110,6 +110,53 @@
         });
     },
 
+    displayGUIGameOver : (babylonGUI,panel,scene,numberCheckPointPassed,timer,textTimer,limitZ,winner)=>{
+        
+        babylonGUI.add(panel);
+
+        var rectGameOver = new BABYLON.GUI.Rectangle();
+        rectGameOver.adaptWidthToChildren = true;
+        rectGameOver.height = "40px";
+        rectGameOver.width = "200px"
+        rectGameOver.cornerRadius = 20;
+        rectGameOver.color = "Orange";
+        rectGameOver.thickness = 4;
+        if(!winner){
+            
+            rectGameOver.background = "red";
+        }else{
+            
+            rectGameOver.background = "green";
+        }
+        rectGameOver.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER
+        panel.addControl(rectGameOver);
+
+
+        var textLoser = new BABYLON.GUI.TextBlock()
+        if(!winner){
+            
+            textLoser.text = "You lose !"
+        }else{
+            
+            textLoser.text = "You win !"
+        }
+        textLoser.color = "white";
+        textLoser.fontSize = 24;
+        rectGameOver.addControl(textLoser);
+
+        var buttonRestart = BABYLON.GUI.Button.CreateSimpleButton("gameOver", "RESTART !");
+        buttonRestart.width = 0.2;
+        buttonRestart.height = "40px";
+        buttonRestart.color = "white";
+        buttonRestart.background = "green";
+        panel.addControl(buttonRestart);
+
+
+
+    },
+
+   
+
 
 }
 
