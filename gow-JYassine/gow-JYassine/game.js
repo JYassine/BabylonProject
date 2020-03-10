@@ -57,6 +57,12 @@ var gameLogic;
 var limitZ = 3500
 var limitX = 800
 
+
+
+
+
+
+
 var createScene = function () {
 
     scene = new BABYLON.Scene(engine);
@@ -78,8 +84,10 @@ var createScene = function () {
     // Attach the camera to the canvas
     camera.attachControl(canvas, true);
 
+    
 
-    GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime, numberCheckPointPassed, numberCheckPoint, textTimer, timer)
+    GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime, 
+        numberCheckPointPassed, numberCheckPoint, textTimer, timer)//, boatEntity.getMomentum())
     engine.displayLoadingUI()
 
 
@@ -110,7 +118,7 @@ var createScene = function () {
                     scene.onPointerObservable.remove(scene.onPointerObservable.observers[2])
                     timerInterval = window.setInterval(() => {
                         timer++;
-                        textTimer.text = "Timer : " + timer;
+                        textTimer.text = "Timer :" + timer;
                         if (timer > maxTime - 10) {
 
                             audioManager.find("clockSong").play(0, 0, 0.3)
@@ -180,14 +188,23 @@ var createScene = function () {
 
     let customLight = new Light()
     var checkPointLight = customLight.createCustomLight("idcheckPoint", 0, 0, 1, scene)
+    
+    
+
 
     /***** CUSTOM LIGHT  ******/
 
     /******** Create checkpoints *******/
     var checkpoints = []
     baseFirstCheckPoint = -300
+
     for (let i = 0; i < numberCheckPoint; i++) {
-        var checkPoint = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 600, tessellation: 96 }, scene);
+        var checkPoint = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 400, tessellation: 96 }, scene);
+
+        // Add the particle effect to the checkpoint
+        customLight.aestheticCheckpoint(checkPoint, scene);
+
+
 
         checkPoint.position.z = baseFirstCheckPoint
         if (i >= 1) {
@@ -508,6 +525,4 @@ const gameOver = (scene, winner) => {
 
 
 }
-
-
 

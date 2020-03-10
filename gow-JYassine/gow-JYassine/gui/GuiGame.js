@@ -1,6 +1,7 @@
  var GuiGame = {
 
-    displayGUI : (textPassed, babylonGUI,textStart,maxTime,numberCheckPointPassed,numberCheckPoint,textTimer,timer) => {
+    displayGUI : (textPassed, babylonGUI,textStart,maxTime,
+        numberCheckPointPassed,numberCheckPoint,textTimer,timer) => { //,momentum) => {
         babylonGUI.createGui()
 
         // GUI FOR TEXT STARTING
@@ -20,6 +21,20 @@
         textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
         babylonGUI.decorText(textPassed,"white","24")
         rect1.addControl(textPassed);
+
+        
+        /* GUI TO DISPLAY SPEED
+        var rectMomentum = new BABYLON.GUI.Rectangle();
+        rectMomentum.adaptWidthToChildren = true;
+        babylonGUI.decor(rectMomentum);
+        babylonGUI.positionElement(rectMomentum,BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP,BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER)
+        rectMomentum.paddingTop = "90px";
+        rectMomentum.height = "40px";
+        babylonGUI.add(rectMomentum);
+        someText = momentum;*/
+
+
+
 
 
 
