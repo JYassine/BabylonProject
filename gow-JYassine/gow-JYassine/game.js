@@ -15,10 +15,17 @@ var engine = new BABYLON.Engine(canvas, true)
 // scene
 var scene;
 
-// missile
+
+// target of the missiles
 var pointMissiles = []
-var missile;
-var spacecraft;
+// missile
+var missiles = [];
+// function to launch missil in an interval of each 7 seconds
+var missileInterval;
+// number of missiles to launch
+var numberMissiles = 2;
+
+
 //turret
 var turrets = []
 var behaviorsTurret = []
@@ -85,9 +92,9 @@ var createScene = function () {
     // Attach the camera to the canvas
     camera.attachControl(canvas, true);
 
-    
 
-    GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime, 
+
+    GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime,
         numberCheckPointPassed, numberCheckPoint, textTimer, timer)//, boatEntity.getMomentum())
     engine.displayLoadingUI()
 
@@ -132,6 +139,73 @@ var createScene = function () {
                         }
                     }, 1000);
 
+                    // LAUNCH MISSIL WITH TIME INTERVAL OF 7 seconds
+                    missileInterval = setInterval(() => {
+
+                        pointMissiles = []
+                        missiles = []
+                        var positionZMissile = boatEntity.getMesh().position.z - 200;
+
+                        var positionXMissile = boatEntity.getMesh().position.x + 30;
+                        for (let i = 0; i < numberMissiles; i++) {
+                            // setup to point the missiles need to target
+                            var light2 = customLight.createCustomLight("idMissile", 1, 0, 0, scene)
+                            var pointMissile = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 20, tessellation: 96 }, scene);
+                            pointMissile.position.z = positionZMissile
+                            pointMissile.position.x = positionXMissile
+                            pointMissile.material = light2;
+                            pointMissile.checkCollisions = true
+                            pointMissile.actionManager = new BABYLON.ActionManager(scene);
+                            pointMissiles.push(pointMissile)
+
+
+                            // setup the missile
+                            var materialShip = new BABYLON.StandardMaterial("shiptx1", scene);
+                            materialShip.diffuseColor = new BABYLON.Color3(1, 0, 0); //Red
+
+                            var meshMissile = BABYLON.Mesh.CreateCylinder("spaceship", 2, 0, 1, 6, 1, scene, false);
+                            meshMissile.scaling = new BABYLON.Vector3(20, 20, 20)
+                            var randomTurret = turrets[Utilities.getRandomInt(2)]
+
+                            meshMissile.position.x = randomTurret.position.x
+                            meshMissile.position.y = randomTurret.position.y
+                            meshMissile.position.z = randomTurret.position.z
+
+                            meshMissile.material = materialShip;
+                            meshMissile.checkCollisions = true
+                            meshMissile.actionManager = new BABYLON.ActionManager(scene);
+                            var missile = new Vehicle3D(meshMissile)
+                            missiles.push(missile)
+                            audioManager.find("missileSong").play()
+
+                            positionZMissile = positionZMissile - 200
+                            positionXMissile = positionXMissile + 60
+
+
+                        }
+
+                        for (let i = 0; i < missiles.length; i++) {
+                            missiles[i].getMesh().actionManager.registerAction(
+                                new BABYLON.ExecuteCodeAction(
+                                    {
+                                        trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
+                                        parameter: pointMissiles[i]
+                                    },
+                                    function () {
+                                        console.log("DISPOOOOOOOOOOOSE")
+                                        missiles[i].getMesh().dispose()
+                                        pointMissiles[i].dispose()
+                                        audioManager.find("missileSong").stop()
+                                        audioManager.find("explosionMissileSong").play()
+                                    }
+
+                                )
+                            );
+                        }
+
+
+
+                    }, 4000)
                     break;
             }
         });
@@ -196,8 +270,8 @@ var createScene = function () {
 
     let customLight = new Light()
     var checkPointLight = customLight.createCustomLight("idcheckPoint", 0, 0, 1, scene)
-    
-    
+
+
 
 
     /***** CUSTOM LIGHT  ******/
@@ -224,57 +298,6 @@ var createScene = function () {
         baseFirstCheckPoint += 500
 
     }
-    /*** Create point missile ***/
-
-
-    pointMissiles = []
-
-    var light2 = customLight.createCustomLight("idMissile", 1, 0, 0, scene)
-    var pointMissile = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 20, tessellation: 96 }, scene);
-    pointMissile.position.x = Utilities.getRandomInt(400)
-    pointMissile.material = light2;
-    pointMissile.checkCollisions = true
-    pointMissiles.push(pointMissile)
-
-    setInterval(() => {
-        if (pointMissiles.length === 1) {
-            pointMissiles[0].dispose()
-            pointMissiles.pop()
-        }
-        var light2 = customLight.createCustomLight("idMissile", 1, 0, 0, scene)
-        var pointMissile = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 20, tessellation: 96 }, scene);
-        pointMissile.position.x = Utilities.getRandomInt(400)
-        if (boatEntity != undefined) {
-            pointMissile.position.z = boatEntity.getMesh().position.z - 200
-        }
-        pointMissile.material = light2;
-        pointMissile.checkCollisions = true
-
-        pointMissile.actionManager = new BABYLON.ActionManager(scene);
-        pointMissiles.push(pointMissile)
-
-
-        var materialShip = new BABYLON.StandardMaterial("shiptx1", scene);
-        materialShip.diffuseColor = new BABYLON.Color3(1, 0, 0); //Red
-
-        spacecraft = BABYLON.Mesh.CreateCylinder("spaceship", 2, 0, 1, 6, 1, scene, false);
-        spacecraft.scaling = new BABYLON.Vector3(20, 20, 20)
-        var randomTurret = turrets[Utilities.getRandomInt(2)]
-
-        spacecraft.position.x= randomTurret.position.x
-        spacecraft.position.y= randomTurret.position.y
-        spacecraft.position.z= randomTurret.position.z
-
-        spacecraft.material = materialShip;
-        spacecraft.checkCollisions = true
-        spacecraft.actionManager = new BABYLON.ActionManager(scene);
-        missile = new Vehicle3D(spacecraft)
-
-        audioManager.find("missileSong").play()
-    }, 7000)
-
-
-
 
 
     /********** HANDLE SOUND **********/
@@ -460,39 +483,18 @@ var createScene = function () {
     });
     scene.registerAfterRender(function () {
 
-        for(let i=0;i<behaviorsTurret.length;i++){
+        for (let i = 0; i < behaviorsTurret.length; i++) {
             behaviorsTurret[i].seekTurret(boatEntity.getMesh())
             behaviorsTurret[i].update()
         }
-        if (missile != undefined) {
-            pointMissiles.forEach(m => {
-                spacecraft.actionManager.registerAction(
-                    new BABYLON.ExecuteCodeAction(
-                        {
-                            trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
-                            parameter: m
-                        },
-                        function () {
-                            if (spacecraft != undefined) {
-                                spacecraft.dispose()
-                            }
-                            pointMissiles[0].dispose()
-                            missile = undefined
-                            audioManager.find("missileSong").stop()
-                            audioManager.find("explosionMissileSong").play()
-    
-    
-                        }
-    
-                    )
-                );
-    
-            })
-            missile.seek(pointMissiles[0])
-            missile.update()
-            Utilities.facePoint(spacecraft, pointMissiles[0].position)
+        
+        if (missiles.length !=0) {
+            for (let i = 0; i < numberMissiles; i++) {
+                missiles[i].seek(pointMissiles[i])
+                missiles[i].update()
+                Utilities.facePoint(missiles[i].getMesh(), pointMissiles[i].position)
+            }
         }
-
 
         boatEntity.handleMovement(map, bigBoat, collisionWithLimit)
         bigBoat.checkCollisions = true
@@ -506,7 +508,7 @@ var createScene = function () {
 
         //block.rotation.y += 0.2;
 
-        
+
 
     });
 
@@ -525,6 +527,9 @@ const gameOver = (scene, winner) => {
     map["q"] = false;
     map["d"] = false;
     clearInterval(timerInterval)
+    clearInterval(missileInterval)
+    missiles=[]
+    pointMissiles=[]
 
     gameLogic.gameOver(winner, panelEndGame, numberCheckPointPassed, timer, textTimer, limitZ)
 

@@ -12,6 +12,10 @@ export default class Vehicle3D {
 
     }
 
+    getMesh(){
+        return this.mesh
+    }
+
     applyForce(force) {
         // We could add mass here if we want A = F / M
         this.acceleration.addInPlace(force);
