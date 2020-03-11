@@ -26,6 +26,7 @@ var behaviorsTurret = []
 var bigBoat;
 var boatEntity;
 var baseFirstCheckPoint;
+//var block;
 //MUSIC
 var audioManager;
 // keypad
@@ -89,6 +90,8 @@ var createScene = function () {
     GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime, 
         numberCheckPointPassed, numberCheckPoint, textTimer, timer)//, boatEntity.getMomentum())
     engine.displayLoadingUI()
+
+
 
 
     // Add the action manager of babylon to handle keypad
@@ -173,6 +176,11 @@ var createScene = function () {
     ground.position.y = -4;
     ground.material = groundMaterial;
     ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 1 }, scene);
+
+    /*// TEST
+    block = new BABYLON.Mesh.CreateBox("pd", 40, scene);
+    block.isVisible = true;
+    block.position = new BABYLON.Vector3(-150,20,2500);*/
 
     // Water mesh
     var waterMesh = BABYLON.Mesh.CreateGround("waterMesh", 8192, 8192, 2, scene, false);
@@ -488,12 +496,17 @@ var createScene = function () {
 
         boatEntity.handleMovement(map, bigBoat, collisionWithLimit)
         bigBoat.checkCollisions = true
-        boxCollider.position.y = boatEntity.getMesh().position.y + 10
-        boxCollider.position.z = boatEntity.getMesh().position.z
-        boxCollider.position.x = boatEntity.getMesh().position.x
-        camera.position.copyFrom(boatEntity.getMesh().position.subtract(boatEntity.getMesh().forward.scale(40)).add(new BABYLON.Vector3(0, 1.7, 0)))
-        camera.setTarget(new BABYLON.Vector3(boatEntity.getMesh().position.x, boatEntity.getMesh().position.y, boatEntity.getMesh().position.z))
-        camera.position.y = 15
+        var boatPos = boatEntity.getMesh().position;
+        boxCollider.position.y = boatPos.y + 10
+        boxCollider.position.z = boatPos.z
+        boxCollider.position.x = boatPos.x
+        camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(40)).add(new BABYLON.Vector3(0, 1.7, 0)))
+        camera.setTarget(new BABYLON.Vector3(boatPos.x, boatPos.y, boatPos.z))
+        camera.position.y = 18
+
+        //block.rotation.y += 0.2;
+
+        
 
     });
 
