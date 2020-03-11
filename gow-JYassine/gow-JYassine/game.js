@@ -283,6 +283,7 @@ var createScene = function () {
         limitPlane.position.y = 10
         limitPlane.position.z = limitZ
         limitPlane.position.x = limitX
+        limitPlane.checkCollisions = true;
 
         var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
         myMaterial.diffuseTexture = new BABYLON.Texture("./textures/rock.jpg", scene);
@@ -293,12 +294,14 @@ var createScene = function () {
         limitPlane2.position.z = limitZ
         limitPlane2.position.x = -limitX
         limitPlane2.material = myMaterial
+        limitPlane2.checkCollisions = true;
 
         var limitPlane3 = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
         limitPlane3.position.y = 10
         limitPlane3.position.z = -1000
         limitPlane3.position.x = 1000 + limitp
         limitPlane3.material = myMaterial
+        limitPlane3.checkCollisions = true;
 
 
 
@@ -384,12 +387,15 @@ var createScene = function () {
 
             // HANDLE COLLISION WITH LIMIT 
             decor.forEach(meshDecor => {
+                /*
+                
                 boatEntity.mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction({
                     trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
                     parameter: meshDecor
                 }, function () {
                     if (boatEntity.mesh.position.x < 0) {
                         boatEntity.getMesh().position.subtractInPlace(new BABYLON.Vector3(-10, 0, 0));
+                        boatEntity.g
                     } else {
                         boatEntity.getMesh().position.subtractInPlace(new BABYLON.Vector3(10, 0, 0));
                     }
@@ -406,7 +412,7 @@ var createScene = function () {
                     collisionWithLimit = false
                     setTimeout(() => { textTimer.color = "yellow" }, 500);
                 }));
-            });
+            */});
 
 
             scene.activeCamera.attachControl(canvas);
