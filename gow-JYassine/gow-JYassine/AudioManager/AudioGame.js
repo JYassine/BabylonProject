@@ -13,6 +13,9 @@ var AudioGame = {
         audioManager.addSong("missileSong","audio/missile.wav",false,false,2)
         audioManager.addSong("explosionMissileSong","audio/explosion_missile.wav",false,false,3)
         
+        audioManager.addSong("ughSong","audio/ugh.mp3",false,false,5)
+        audioManager.addSong("ennemySpottedSong","audio/ennemy_spotted.mp3",false,false,2)
+        
     }
 
 }
