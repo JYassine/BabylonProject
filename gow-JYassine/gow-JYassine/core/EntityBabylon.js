@@ -32,7 +32,7 @@ export default class EntityBabylon {
 
     // there's a minimum crashing recoil speed, else some bad hitbox things can happen
     crashRecoil() {
-        this.momentum = Math.min(this.momentum/(-2),-2);
+        this.momentum = Math.min(this.momentum/(-3.5),-2);
     }
 
     handleMovement(map, otherMesh) {
@@ -54,7 +54,9 @@ export default class EntityBabylon {
             0,
             parseFloat(parseFloat(Math.cos(this.mesh.rotation.y)) * -(this.momentum))));
         
-        this.mesh.rotate(BABYLON.Axis.Z, -Math.PI / 100, BABYLON.Space.WORLD);
+        //this.mesh.rotate(BABYLON.Axis.X, Math.PI / 5000, BABYLON.Space.WORLD);
+       // this.mesh.rotation = new BABYLON.Vector3(this.mesh.rotation.x, 
+         //   this.mesh.rotation.y, this.mesh.rotation.z);
         //this.mesh.rotation.z = this.momentum;
         otherMesh.forEach(mesh => {
             if (mesh.name === "Plane.000" || mesh.name === "Plane.029" || mesh.name === "Plane.047"

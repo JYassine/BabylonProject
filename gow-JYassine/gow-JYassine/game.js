@@ -431,7 +431,6 @@ var createScene = function () {
                             parameter: i_Obstacle
                         },
                         function() {
-                            console.log("eh cc pd ntm");
                         }
                     )
                 )*/
@@ -442,7 +441,6 @@ var createScene = function () {
                 boatEntity.getMesh().actionManager.registerAction(new BABYLON.ExecuteCodeAction(
                     { trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger, parameter: i_Obstacle},
                     function() {
-                        console.log("eh cc");
                     }
                 ))
 
@@ -459,7 +457,6 @@ var createScene = function () {
                     }
                     //textTimer.color = "red"
                     collisionWithObstacle = true
-                    console.log("eh cc");
                     //audioManager.find("crashSong").play()
                     //timer += 1
                 })); */
@@ -555,9 +552,6 @@ var createScene = function () {
         camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(40)).add(new BABYLON.Vector3(0, 1.7, 0)))
         camera.setTarget(new BABYLON.Vector3(boatPos.x, boatPos.y, boatPos.z))
         camera.position.y = 18
-        
-        console.log("[" + hitboxStaminaLastFrame + ", " 
-         + hitboxStamina + "]")
 
         hitboxStaminaLastFrame = hitboxStamina;
         hitboxStamina = false;
@@ -624,7 +618,6 @@ const gameOver = (scene, winner) => {
 var boatCrash = function() {
     if (!(hitboxStaminaLastFrame) && (hitboxStamina)) {
         boatEntity.crashRecoil();
-        console.log("CRASHED");
     }
     else if (hitboxStaminaLastFrame && !(hitboxStamina)) {
         boatHitbox.checkCollisions = true;
