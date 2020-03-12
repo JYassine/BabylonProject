@@ -1,10 +1,21 @@
 export default class EntityBabylon {
 
-    momentum = 0;
+    preMomentum = 0; // speed on previous frame
+    momentum = 0;  // speed on current frame
     acceleration = 0.14;
     decel = 0.98;
     maxSpeed = 18;
     minSpeed = 0;
+
+    // camera twerk
+    // the duration of the camera going mad when you hit something. you can modify this
+    crashDuration = 8;
+    // procs a crash when true. don't touch this value, the game sets it up
+    doCrash = false;
+    // don't touch neither, crash remaining time
+    currentCrashDuration = 0;
+    // no toucherino. camera madness based on how violent the impact
+    crashIntensity;
 
 
 
@@ -20,6 +31,9 @@ export default class EntityBabylon {
         this.mesh.checkCollisions = true
     }
 
+    getCrashState() {
+        return this.doCrash
+    }
 
     getMesh() {
         return this.mesh;
@@ -30,12 +44,27 @@ export default class EntityBabylon {
         return this.momentum;
     }
 
-    // there's a minimum crashing recoil speed, else some bad hitbox things can happen
     crashRecoil() {
-        this.momentum = Math.min(this.momentum/(-3.5),-2);
+        this.doCrash = true;
+    }
+
+    getCrashIntensity() {
+        return this.crashIntensity
     }
 
     handleMovement(map, otherMesh) {
+
+        //console.log("[" + this.preMomentum + ", " + this.momentum + "]")
+        this.preMomentum = this.momentum;
+
+        if (this.doCrash) {
+            this.doCrash = false;
+            this.currentCrashDuration = this.crashDuration;
+            this.crashIntensity = 2 + (this.momentum/3);
+            // there's a minimum crashing recoil speed, else some bad hitbox things can happen
+            this.momentum = Math.min(this.momentum/(-3.5),-2);
+        }
+        this.currentCrashDuration = Math.max(0, this.currentCrashDuration-1);
 
         //if (collisionWithLimit == false) {
         // pressing Z (forward) is forced if momentum is negative. Momentum is negative when
@@ -46,7 +75,10 @@ export default class EntityBabylon {
         }
         else {
             // deceleration is logarithmic
-            this.momentum = Math.max(this.momentum * this.decel, this.minSpeed);
+            // there's a certain cap upon which the speed drops to 0. This prevents the deceleration
+            // from pseudo never-ending
+            this.momentum = ((this.momentum < (this.maxSpeed/18)) ? 0 : 
+                this.momentum = Math.max(this.momentum * this.decel, this.minSpeed));
         }
 
         this.mesh.moveWithCollisions(new BABYLON.Vector3(
@@ -55,8 +87,11 @@ export default class EntityBabylon {
             parseFloat(parseFloat(Math.cos(this.mesh.rotation.y)) * -(this.momentum))));
         
         //this.mesh.rotate(BABYLON.Axis.X, Math.PI / 5000, BABYLON.Space.WORLD);
-       // this.mesh.rotation = new BABYLON.Vector3(this.mesh.rotation.x, 
-         //   this.mesh.rotation.y, this.mesh.rotation.z);
+        this.mesh.rotate(BABYLON.Axis.X, (this.preMomentum - this.momentum) * (Math.PI / 550), 
+                BABYLON.Space.LOCAL);
+                
+        //console.log((this.preMomentum - this.momentum) * (Math.PI / 550))
+
         //this.mesh.rotation.z = this.momentum;
         otherMesh.forEach(mesh => {
             if (mesh.name === "Plane.000" || mesh.name === "Plane.029" || mesh.name === "Plane.047"

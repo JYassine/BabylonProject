@@ -457,8 +457,6 @@ var createScene = function () {
                     }
                     //textTimer.color = "red"
                     collisionWithObstacle = true
-                    //audioManager.find("crashSong").play()
-                    //timer += 1
                 })); */
 
                 /*
@@ -549,9 +547,16 @@ var createScene = function () {
         //boxCollider.position.y = boatPos.y + 10
         //boxCollider.position.z = boatPos.z
         //boxCollider.position.x = boatPos.x
-        camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(40)).add(new BABYLON.Vector3(0, 1.7, 0)))
+        camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(48)).add(new BABYLON.Vector3(0, 1.7, 0)))
         camera.setTarget(new BABYLON.Vector3(boatPos.x, boatPos.y, boatPos.z))
-        camera.position.y = 18
+        camera.position.y = 16
+        if (boatEntity.currentCrashDuration > 0) {
+            var violence = boatEntity.getCrashIntensity();
+            var violenceRange = violence*2;
+            camera.position = new BABYLON.Vector3(camera.position.x + (-violence + Utilities.getRandomInt(violenceRange)),
+                             camera.position.y + (-violence + Utilities.getRandomInt(violenceRange)),
+                            camera.position.z + (-violence + Utilities.getRandomInt(violenceRange)));
+        }
 
         hitboxStaminaLastFrame = hitboxStamina;
         hitboxStamina = false;
@@ -561,7 +566,7 @@ var createScene = function () {
                 boatHitbox.checkCollisions = false;
                 // we could have different crashing power depending on obstacles later on
                 hitboxStamina = true;
-                boatCrash()
+                boatCrash(audioManager)
                 // no need to check for the other obstacles if there's at least one which struck the boat
                 i = obstacles.length;
             }
@@ -615,9 +620,12 @@ const gameOver = (scene, winner) => {
 }
 
 
-var boatCrash = function() {
+var boatCrash = function(audioManager) {
     if (!(hitboxStaminaLastFrame) && (hitboxStamina)) {
         boatEntity.crashRecoil();
+        audioManager.find("crashSong").play()
+        timer += 2 // NERF HAMMER
+
     }
     else if (hitboxStaminaLastFrame && !(hitboxStamina)) {
         boatHitbox.checkCollisions = true;
