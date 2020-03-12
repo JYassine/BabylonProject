@@ -15,7 +15,6 @@ var engine = new BABYLON.Engine(canvas, true)
 // scene
 var scene;
 
-
 // target of the missiles
 var pointMissiles = []
 // missile
@@ -44,6 +43,9 @@ var collisionWithLimit = false
 // checkpoint
 var numberCheckPoint = 5
 var numberCheckPointPassed = 0
+var maxPositionCheckPoint = 600;
+var timerDirection;
+var timeChangeDirection = 0;
 // function interval
 var timerInterval;
 // gui 
@@ -64,11 +66,6 @@ var gameLogic;
 
 var limitZ = 3500
 var limitX = 800
-
-
-
-
-
 
 
 var createScene = function () {
@@ -139,6 +136,7 @@ var createScene = function () {
                         }
                     }, 1000);
 
+
                     // LAUNCH MISSIL WITH TIME INTERVAL OF 7 seconds
                     missileInterval = setInterval(() => {
 
@@ -192,7 +190,6 @@ var createScene = function () {
                                         parameter: pointMissiles[i]
                                     },
                                     function () {
-                                        console.log("DISPOOOOOOOOOOOSE")
                                         missiles[i].getMesh().dispose()
                                         pointMissiles[i].dispose()
                                         audioManager.find("missileSong").stop()
@@ -202,10 +199,8 @@ var createScene = function () {
                                 )
                             );
                         }
-
-
-
                     }, 4000)
+
                     break;
             }
         });
@@ -290,7 +285,7 @@ var createScene = function () {
 
         checkPoint.position.z = baseFirstCheckPoint
         if (i >= 1) {
-            checkPoint.position.x = Utilities.getRandomInt(600)
+            checkPoint.position.x = Utilities.getRandomInt(maxPositionCheckPoint)
         }
         checkPoint.material = checkPointLight;
         checkPoint.checkCollisions = true
@@ -299,7 +294,7 @@ var createScene = function () {
 
     }
 
-
+    
     /********** HANDLE SOUND **********/
 
 
@@ -367,6 +362,9 @@ var createScene = function () {
     }
 
 
+    timerDirection = setInterval(()=>{
+        timeChangeDirection+=1
+    },3000)
 
 
 
@@ -487,14 +485,24 @@ var createScene = function () {
             behaviorsTurret[i].seekTurret(boatEntity.getMesh())
             behaviorsTurret[i].update()
         }
-        
-        if (missiles.length !=0) {
+
+        if (missiles.length != 0) {
             for (let i = 0; i < numberMissiles; i++) {
                 missiles[i].seek(pointMissiles[i])
                 missiles[i].update()
                 Utilities.facePoint(missiles[i].getMesh(), pointMissiles[i].position)
             }
         }
+
+        
+
+        checkpoints.forEach(checkP=>{
+            if(timeChangeDirection%2==0){
+                checkP.position.x+=1
+            }else{
+                checkP.position.x-=1
+            }
+        })
 
         boatEntity.handleMovement(map, bigBoat, collisionWithLimit)
         bigBoat.checkCollisions = true
@@ -528,8 +536,11 @@ const gameOver = (scene, winner) => {
     map["d"] = false;
     clearInterval(timerInterval)
     clearInterval(missileInterval)
-    missiles=[]
-    pointMissiles=[]
+    clearInterval(timerDirection)
+    timeChangeDirection = 0
+    missiles = []
+    pointMissiles = []
+
 
     gameLogic.gameOver(winner, panelEndGame, numberCheckPointPassed, timer, textTimer, limitZ)
 

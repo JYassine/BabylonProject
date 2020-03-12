@@ -10,8 +10,8 @@ var AudioGame = {
         audioManager.addSong("clockSong","audio/tick_tock.wav",false,false,3)
         audioManager.addSong("winnerSong","audio/win.mp3",false,false,3)
         audioManager.addSong("loserSong","audio/fail_sound.mp3",false,false,3)
-        audioManager.addSong("missileSong","audio/missile.wav",false,false,4)
-        audioManager.addSong("explosionMissileSong","audio/explosion_missile.wav",false,false,4)
+        audioManager.addSong("missileSong","audio/missile.wav",false,false,2)
+        audioManager.addSong("explosionMissileSong","audio/explosion_missile.wav",false,false,3)
         
     }
 
