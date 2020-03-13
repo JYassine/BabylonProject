@@ -102,9 +102,9 @@ var createScene = function () {
     // Attach the camera to the canvas
     camera.attachControl(canvas, true);
 
-    
 
-    GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime, 
+
+    GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime,
         numberCheckPointPassed, numberCheckPoint, textTimer, timer)//, boatEntity.getMomentum())
     engine.displayLoadingUI()
 
@@ -156,12 +156,12 @@ var createScene = function () {
 
                         audioManager.find("ennemySpottedSong").play()
 
-                        setTimeout(()=>{
-                            
+                        setTimeout(() => {
+
                             pointMissiles = []
                             missiles = []
                             var positionZMissile = boatEntity.getMesh().position.z - 200;
-    
+
                             var positionXMissile = boatEntity.getMesh().position.x + 30;
                             for (let i = 0; i < numberMissiles; i++) {
                                 // setup to point the missiles need to target
@@ -173,33 +173,33 @@ var createScene = function () {
                                 pointMissile.checkCollisions = true
                                 pointMissile.actionManager = new BABYLON.ActionManager(scene);
                                 pointMissiles.push(pointMissile)
-    
-    
+
+
                                 // setup the missile
                                 var materialShip = new BABYLON.StandardMaterial("shiptx1", scene);
                                 materialShip.diffuseColor = new BABYLON.Color3(1, 0, 0); //Red
-    
+
                                 var meshMissile = BABYLON.Mesh.CreateCylinder("spaceship", 2, 0, 1, 6, 1, scene, false);
                                 meshMissile.scaling = new BABYLON.Vector3(20, 20, 20)
                                 var randomTurret = turrets[Utilities.getRandomInt(2)]
-    
+
                                 meshMissile.position.x = randomTurret.position.x
                                 meshMissile.position.y = randomTurret.position.y
                                 meshMissile.position.z = randomTurret.position.z
-    
+
                                 meshMissile.material = materialShip;
                                 meshMissile.checkCollisions = true
                                 meshMissile.actionManager = new BABYLON.ActionManager(scene);
                                 var missile = new Vehicle3D(meshMissile)
                                 missiles.push(missile)
                                 audioManager.find("missileSong").play()
-    
+
                                 positionZMissile = positionZMissile - 200
                                 positionXMissile = positionXMissile + 60
-    
-    
+
+
                             }
-    
+
                             for (let i = 0; i < missiles.length; i++) {
                                 missiles[i].getMesh().actionManager.registerAction(
                                     new BABYLON.ExecuteCodeAction(
@@ -213,10 +213,10 @@ var createScene = function () {
                                             audioManager.find("missileSong").stop()
                                             audioManager.find("explosionMissileSong").play()
                                         }
-    
+
                                     )
                                 );
-    
+
                                 missiles[i].getMesh().actionManager.registerAction(
                                     new BABYLON.ExecuteCodeAction(
                                         {
@@ -227,26 +227,26 @@ var createScene = function () {
                                             audioManager.find("ughSong").play()
                                             missiles[i].getMesh().dispose()
                                             pointMissiles[i].dispose()
-                                            timer+=8
-                                            textTimer.color="red"
-                                            textTimer.fontSize=30
-                                            setTimeout(()=>{
-                                                textTimer.color="white"
-                                                textTimer.fontSize=24
-                                            },2000)
+                                            timer += 8
+                                            textTimer.color = "red"
+                                            textTimer.fontSize = 30
+                                            setTimeout(() => {
+                                                textTimer.color = "white"
+                                                textTimer.fontSize = 24
+                                            }, 2000)
                                             audioManager.find("missileSong").stop()
                                             audioManager.find("explosionMissileSong").play()
-                                            
+
                                         }
-    
+
                                     )
                                 );
                             }
 
 
-                        },2000)
+                        }, 2000)
 
-                       
+
                     }, 4000)
 
             }
@@ -312,8 +312,8 @@ var createScene = function () {
 
     let customLight = new Light()
     var checkPointLight = customLight.createCustomLight("idcheckPoint", 0, 0, 1, scene)
-    
-    
+
+
 
 
     /***** CUSTOM LIGHT  ******/
@@ -354,47 +354,91 @@ var createScene = function () {
     /****CREATE LIMITS OF THE GAME *********/
     // obstacles is a list of every mesh/object in the game against which the boat would stop against
     var obstacles = []
-    for (let i = 0; i < 200; i++) {
-        var limitPlane = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
-        limitPlane.position.y = 10
-        limitPlane.position.z = limitZ
-        limitPlane.position.x = limitX
-        limitPlane.checkCollisions = true;
 
-        var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
-        myMaterial.diffuseTexture = new BABYLON.Texture("./textures/rock.jpg", scene);
-        limitPlane.material = myMaterial;
+    var rockTexture = new BABYLON.Texture("./textures/rock.jpg", scene);
 
-        var limitPlane2 = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
-        limitPlane2.position.y = 10
-        limitPlane2.position.z = limitZ
-        limitPlane2.position.x = -limitX
-        limitPlane2.material = myMaterial
-        limitPlane2.checkCollisions = true;
+    var rockMaterial = new BABYLON.StandardMaterial('rockLee', scene);
+    rockMaterial.diffuseTexture = rockTexture;
+    
+    var rockHeight = 150    
+    var rockWidth = 45
+    var rockWallSize = 220
+    rockTexture.vScale *= (rockWallSize/2); // repeats the texture with a size depending on the amount of "texture blocks"
+    rockTexture.uScale = rockHeight/120
+    var rockWall1 = new BABYLON.MeshBuilder.CreateBox("rockWall1", { height: rockHeight, 
+        width: rockWidth, depth: rockWidth*rockWallSize }, scene)
+    rockWall1.material = rockMaterial;
+    rockWall1.position = new BABYLON.Vector3(limitX, rockHeight/2, limitZ);
+    rockWall1.checkCollisions = true;
 
-        var limitPlane3 = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
-        limitPlane3.position.y = 10
-        limitPlane3.position.z = -1000
-        limitPlane3.position.x = 1000 + limitp
-        limitPlane3.material = myMaterial
-        limitPlane3.checkCollisions = true;
+    var rockWall2 = new BABYLON.MeshBuilder.CreateBox("rockWall2", { height: rockHeight, 
+        width: rockWidth, depth: rockWidth*rockWallSize }, scene)
+        rockWall2.material = rockMaterial;
+        rockWall2.position = new BABYLON.Vector3(-limitX, rockHeight/2, limitZ);
+        rockWall2.checkCollisions = true;
 
 
-
-        obstacles.push(limitPlane)
-        obstacles.push(limitPlane2)
-        obstacles.push(limitPlane3)
-
-
-        limitZ -= 40
-        limitp -= 40
+    // PLUS LE SCALE AUGMENTE
+    // PLUS L'IMAGE EST RETRECIE (repeated etc)
+    //rockTexture.vScale *= (1/0.2);
+    //rockTexture.uScale *= 1/0.5;
 
 
-    }
+
+    /*var cylinder = BABYLON.Mesh.CreateCylinder("rebarGrayZAxis", height1, 2, 2, 6, scene, false);
+    cylinder.material = textures['Gray'];
+
+    var cylinder = BABYLON.Mesh.CreateCylinder("rebarGrayXAxis", height2, 2, 2, 6, scene, false);
+    cylinder.material = textures['Gray2'];
+    */
+
+
+   //var mapBorder = mapBorderBlock.clone(); new BABYLON.MeshBuilder.CreateBox("mapBorder", { height: 40, width: 40, depth: 320}, scene)
+    //var limitPlane = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+
+
+    //var rockTexture = new BABYLON.Texture("./textures/rock.jpg", scene);
+    //rockTexture.uScale *= (8192 / 40);
+    //console.log(rockTexture.uScale)
+
+    //var myMaterial = new BABYLON.StandardMaterial("myMaterial", scene);
+    //myMaterial.diffuseTexture = rockTexture;
+    //myMaterial.diffuseTexture.scale == 800
+    //myMaterial.diffuseTexture.uScale == 90000;
+    //myMaterial.diffuseTexture.vScale == 90000; // this prevents the texture from stretching
+    // over the length of the wall
+    //mapBorder.material = myMaterial;
+
+    /*var limitPlane2 = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+    limitPlane2.position.y = 10
+    limitPlane2.position.z = limitZ
+    limitPlane2.position.x = -limitX
+    limitPlane2.material = myMaterial
+    limitPlane2.checkCollisions = true;
+
+    var limitPlane3 = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
+    limitPlane3.position.y = 10
+    limitPlane3.position.z = -1000
+    limitPlane3.position.x = 1000 + limitp
+    limitPlane3.material = myMaterial
+    limitPlane3.checkCollisions = true;*/
+
+
+
+    //obstacles.push(mapBorderOrigin)
+    obstacles.push(rockWall1)
+    obstacles.push(rockWall2)
+
+
+    limitZ -= 40
+    limitp -= 40
+
+
+    //}
 
     /**** CREATE TURRET ******/
 
-    let turretY = 50
+    let turretY = 200
     let turretZ = 1500
     let turretX = 800
 
@@ -414,12 +458,12 @@ var createScene = function () {
 
 
 
-    
-    
-    
-    timerDirection = setInterval(()=>{
-        timeChangeDirection+=1
-    },3000)
+
+
+
+    timerDirection = setInterval(() => {
+        timeChangeDirection += 1
+    }, 3000)
 
 
 
@@ -444,8 +488,8 @@ var createScene = function () {
             // "the hitbox of the boat is always equal to the boat's position"
             // I believe since the position is an object, and the hitbox uses the boat's position
             // object ==> the hitbox's position refreshes simultanously as the boat moves!
-            boatHitbox = new BABYLON.MeshBuilder.CreateBox("boatHitbox", 
-            {size: boatHitboxSize, updatable: true}, scene)
+            boatHitbox = new BABYLON.MeshBuilder.CreateBox("boatHitbox",
+                { size: boatHitboxSize, updatable: true }, scene)
             boatHitbox.position = boatEntity.getMesh().position
             boatHitbox.checkCollisions = true;
             boatHitbox.isVisible = false; // SET THIS TO TRUE TO SEE THE BOAT HITBOX
@@ -523,11 +567,11 @@ var createScene = function () {
     });
     scene.registerAfterRender(function () {
 
-        for(let i=0;i<behaviorsTurret.length;i++){
+        for (let i = 0; i < behaviorsTurret.length; i++) {
             behaviorsTurret[i].seekTurret(boatEntity.getMesh())
             behaviorsTurret[i].update()
         }
-        
+
         if (missiles.length != 0) {
             for (let i = 0; i < numberMissiles; i++) {
                 missiles[i].seek(pointMissiles[i])
@@ -536,13 +580,13 @@ var createScene = function () {
             }
         }
 
-        
 
-        checkpoints.forEach(checkP=>{
-            if(timeChangeDirection%2==0){
-                checkP.position.x+=1
-            }else{
-                checkP.position.x-=1
+
+        checkpoints.forEach(checkP => {
+            if (timeChangeDirection % 2 == 0) {
+                checkP.position.x += 1
+            } else {
+                checkP.position.x -= 1
             }
         })
 
@@ -558,16 +602,16 @@ var createScene = function () {
         camera.position.y = 16
         if (boatEntity.currentCrashDuration > 0) {
             var violence = boatEntity.getCrashIntensity();
-            var violenceRange = violence*2;
+            var violenceRange = violence * 2;
             camera.position = new BABYLON.Vector3(camera.position.x + (-violence + Utilities.getRandomInt(violenceRange)),
-                             camera.position.y + (-violence + Utilities.getRandomInt(violenceRange)),
-                            camera.position.z + (-violence + Utilities.getRandomInt(violenceRange)));
+                camera.position.y + (-violence + Utilities.getRandomInt(violenceRange)),
+                camera.position.z + (-violence + Utilities.getRandomInt(violenceRange)));
         }
 
         hitboxStaminaLastFrame = hitboxStamina;
         hitboxStamina = false;
         var i = 0;
-        while (i < obstacles.length) { 
+        while (i < obstacles.length) {
             if (boatHitbox.intersectsMesh(obstacles[i], false)) {
                 boatHitbox.checkCollisions = false;
                 // we could have different crashing power depending on obstacles later on
@@ -581,12 +625,12 @@ var createScene = function () {
         }
 
         //obstacles.forEach(i_Obstacle => {  
-       // })
+        // })
 
 
         //block.rotation.y += 0.2;
 
-        
+
 
     });
 
@@ -631,7 +675,7 @@ const gameOver = (scene, winner) => {
 }
 
 
-var boatCrash = function(audioManager) {
+var boatCrash = function (audioManager) {
     if (!(hitboxStaminaLastFrame) && (hitboxStamina)) {
         boatEntity.crashRecoil();
         audioManager.find("crashSong").play()

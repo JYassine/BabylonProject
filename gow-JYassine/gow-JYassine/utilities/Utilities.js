@@ -36,6 +36,21 @@ var Utilities = {
 		
 		BABYLON.Quaternion.FromRotationMatrixToRef(mat, rotatingObject.rotationQuaternion);
 		
+	},
+
+	// give a mesh which has a correctly stretched texture and another mesh which is bigger/smaller.
+	// returns the correctly stretched texture mesh with a correctly stretched texture
+	textureRescale : (goodLookingMesh, stretchedMesh) => {
+		toStretchTexture = goodLookingMesh.diffuseTexture.clone();
+		height1 = goodLookingMesh.height;
+		height2 = stretchedMesh.height;
+		depth1 = goodLookingMesh.depth;
+		depth2 = stretchedMesh.depth;
+
+		toStretchTexture.vScale = height1 / height2;
+		toStretchTexture.uScale = depth1 / depth2;
+		stretchedMesh.diffuseTexture = toStretchTexture;
+		return stretchedMesh;
 	}
     
 }
