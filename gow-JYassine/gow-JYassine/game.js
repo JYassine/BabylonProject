@@ -648,6 +648,7 @@ const gameOver = (scene, winner) => {
     map["z"] = false;
     map["q"] = false;
     map["d"] = false;
+    map["s"] = false;
     clearInterval(timerInterval)
     clearInterval(missileInterval)
     clearInterval(timerDirection)

@@ -6,6 +6,19 @@ export default class EntityBabylon {
     decel = 0.98;
     maxSpeed = 18;
     minSpeed = 0;
+    // how slower is backtrack next to the forward speed
+    backTrackratio = 1/3;
+    maxBacktrackSpeed = -(this.maxSpeed * this.backTrackratio);
+
+    // guaranteed angle spin per frame no matter what your current speed is
+    minimumDrift = Math.PI/600;
+
+    // how violent is a crash with an obstacle
+    // upon hitting an obstacle, your momentum is multiplied by the value below to determine
+    // the recoil
+    // note the recoil can't exceed the maxBacktrackSpeed value, and even a collision with very small
+    // speed will have a minimum collision recoil
+    crashingRecoil = -(1/2);
 
     // camera twerk
     // the duration of the camera going mad when you hit something. you can modify this
@@ -53,6 +66,7 @@ export default class EntityBabylon {
     }
 
     handleMovement(map, otherMesh) {
+        var speedRatio = this.momentum/this.maxSpeed;
 
         //console.log("[" + this.preMomentum + ", " + this.momentum + "]")
         this.preMomentum = this.momentum;
@@ -62,24 +76,36 @@ export default class EntityBabylon {
             this.currentCrashDuration = this.crashDuration;
             this.crashIntensity = 2 + (this.momentum/3);
             // there's a minimum crashing recoil speed, else some bad hitbox things can happen
-            this.momentum = Math.min(this.momentum/(-3.5),-2);
+            // also a crashing can't exceed the maximum backtracking speed
+            this.momentum = Math.min(Math.max(this.momentum*this.crashingRecoil, this.maxBacktrackSpeed) ,-1.5);
         }
         this.currentCrashDuration = Math.max(0, this.currentCrashDuration-1);
 
-        //if (collisionWithLimit == false) {
         // pressing Z (forward) is forced if momentum is negative. Momentum is negative when
-        // the boat is recovering from hitting an obstacle
-        if ((map["z"] || map["Z"]) || (this.momentum < 0)) {
+        // the boat is recovering from hitting an obstacle, or when 
+        var isBacktracking = (map["s"] || map["S"]);
+        if ((map["z"] || map["Z"])) {
             // acceleration is linear
             this.momentum = Math.min(this.momentum + this.acceleration, this.maxSpeed);
+        }
+        else if (isBacktracking && (this.momentum <= 0)) {
+            this.momentum = Math.max(-(this.maxSpeed*this.backTrackratio), 
+            this.momentum - (this.acceleration * this.backTrackratio))
         }
         else {
             // deceleration is logarithmic
             // there's a certain cap upon which the speed drops to 0. This prevents the deceleration
             // from pseudo never-ending
-            this.momentum = ((this.momentum < (this.maxSpeed/18)) ? 0 : 
-                this.momentum = Math.max(this.momentum * this.decel, this.minSpeed));
+
+            // the 18 IS AN ARBITRARY BALANCE VALUE. MIGHT WANT TO MAKE IT MORE CUSTOMIZABLE
+            // "Braking" which is attempting to backtrack when your speed is > 0, will just
+            // decelerate on a twice as fast rate
+            this.momentum = 
+             ((this.momentum < (this.maxSpeed/18) 
+                && (this.momentum > -(this.maxSpeed/18*this.backTrackratio))) ? 0 : 
+                this.momentum = this.momentum * this.decel * ((isBacktracking) ? this.decel : 1));
         }
+        //console.log(this.momentum)
 
         this.mesh.moveWithCollisions(new BABYLON.Vector3(
             parseFloat(parseFloat(Math.sin(this.mesh.rotation.y)) * (this.momentum)),
@@ -101,17 +127,11 @@ export default class EntityBabylon {
         })
 
         // }
-        if ((map["q"] || map["Q"])) {
-            //if (this.mesh._rotationQuaternion.w <= 0.80) {
-            this.mesh.rotate(BABYLON.Axis.Y, -Math.PI / 100, BABYLON.Space.WORLD);
-            this.mesh.rotation.y -= -Math.PI / 100;
-            //}
-        }
-        else if ((map["d"] || map["D"])) {
-            //if (this.mesh._rotationQuaternion.w >= -0.80) {
-            this.mesh.rotate(BABYLON.Axis.Y, Math.PI / 100, BABYLON.Space.WORLD);
-            this.mesh.rotation.y += -Math.PI / 100;
-            //}
+        var drift = ((map["q"] || map["Q"]) ? -1 :  (map["d"] || map["D"]) ? 1 : 0);
+        if (drift != 0) {
+            var driftAngle = this.minimumDrift * drift; //speedRatio*(drift*(Math.PI / 100))
+            this.mesh.rotate(BABYLON.Axis.Y, driftAngle + (speedRatio*(drift*(Math.PI / 350))), BABYLON.Space.WORLD);
+            this.mesh.rotation.y -= driftAngle + (speedRatio*(drift*(Math.PI / 350)));
         }
 
     }
