@@ -25,15 +25,16 @@ var missileInterval;
 // number of missiles to launch
 var numberMissiles = 2;
 
+var map = {}
+
 
 //turret
 var turrets = []
 var behaviorsTurret = []
-// OUR BOAT
-var bigBoat;
+// OUR BOAT is our boy
 var boatEntity;
 var boatHitbox; // an invisible square around the boat for collision detection
-var boatHitboxSize = 25 // it's a CUBE. this is the hitbox size.
+var boatHitboxSize = 18 // it's a CUBE. this is the hitbox size.
 var hitboxStamina = false; // if true, the boat hitbox is stuck in at least 1 other solid
 var hitboxStaminaLastFrame = false; // same but for the previous frame (both are compared to do stuff)
 
@@ -42,7 +43,6 @@ var baseFirstCheckPoint;
 //MUSIC
 var audioManager;
 // keypad
-var map = {}; //object for multiple key presses
 
 //collision
 var collisionWithObstacle = false
@@ -122,19 +122,9 @@ var createScene = function () {
 
                     BABYLON.Engine.audioEngine.unlock();
                     audioManager.find("clickSong").play()
-                    var actionKeyup = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
-                        map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
 
-                    });
-
-                    var actionKeydown = scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
-                        map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
-                    }));
-
-                    scene.actionManager.registerAction(actionKeyup)
-
-                    scene.actionManager.registerAction(actionKeydown)
-
+                    // make the keyboard keys respond to input
+                    Utilities.bindControls(map, scene);
                     textStart.dispose()
                     scene.onPointerObservable.remove(scene.onPointerObservable.observers[2])
                     timerInterval = window.setInterval(() => {
@@ -483,6 +473,7 @@ var createScene = function () {
 
             scene.activeCamera.attachControl(canvas);
             boatEntity = new EntityBabylon(newMeshes[0], scene)
+            boatEntity.setSpinningWheels(newMeshes)
             boatEntity.checkCollisions = false;
             boatEntity.getMesh().checkCollisions = false;
             // "the hitbox of the boat is always equal to the boat's position"
@@ -490,7 +481,6 @@ var createScene = function () {
             // object ==> the hitbox's position refreshes simultanously as the boat moves!
             boatHitbox = new BABYLON.MeshBuilder.CreateBox("boatHitbox",
                 { size: boatHitboxSize, updatable: true }, scene)
-            boatHitbox.position = boatEntity.getMesh().position
             boatHitbox.checkCollisions = true;
             boatHitbox.isVisible = false; // SET THIS TO TRUE TO SEE THE BOAT HITBOX
 
@@ -521,7 +511,6 @@ var createScene = function () {
             //boxCollider.position = boatEntity.getMesh().position
 
             waterMaterial.addToRenderList(boatEntity.getMesh());
-            bigBoat = newMeshes
 
             /// useful? v==
             collisionWithObstacle = false;
@@ -591,15 +580,29 @@ var createScene = function () {
         })
 
 
-        boatEntity.handleMovement(map, bigBoat, collisionWithObstacle)
-        bigBoat.checkCollisions = false // true;
+        boatEntity.handleMovement(map, boatHitbox)
+
+
         var boatPos = boatEntity.getMesh().position;
+        // moves the boat hitbox to the boat's position
+        boatHitbox.position = boatPos;
         //boxCollider.position.y = boatPos.y + 10
         //boxCollider.position.z = boatPos.z
         //boxCollider.position.x = boatPos.x
-        camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(48)).add(new BABYLON.Vector3(0, 1.7, 0)))
-        camera.setTarget(new BABYLON.Vector3(boatPos.x, boatPos.y, boatPos.z))
-        camera.position.y = 16
+
+        var cameraX = boatPos.x - Math.sin(boatEntity.getEntityAngle()) * -(50)
+        var cameraZ = boatPos.z + Math.cos(boatEntity.getEntityAngle()) * (50)
+
+
+        camera.position = new BABYLON.Vector3(
+            cameraX,
+            boatPos.y + 13 - (boatEntity.getSpeedRatio() * 18), 
+            cameraZ)
+        //camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(48)).add(new BABYLON.Vector3(0, 1.7, 0)))
+        
+        camera.setTarget(boatPos);
+        camera.position.y += 18
+        
         if (boatEntity.currentCrashDuration > 0) {
             var violence = boatEntity.getCrashIntensity();
             var violenceRange = violence * 2;
@@ -645,10 +648,7 @@ window.addEventListener('resize', function () {
 });
 
 const gameOver = (scene, winner) => {
-    map["z"] = false;
-    map["q"] = false;
-    map["d"] = false;
-    map["s"] = false;
+    boatEntity.setControls(false);
     clearInterval(timerInterval)
     clearInterval(missileInterval)
     clearInterval(timerDirection)
@@ -680,11 +680,14 @@ var boatCrash = function (audioManager) {
     if (!(hitboxStaminaLastFrame) && (hitboxStamina)) {
         boatEntity.crashRecoil();
         audioManager.find("crashSong").play()
-        timer += 2 // NERF HAMMER
+        //timer += 2 // NERF HAMMER
 
     }
     else if (hitboxStaminaLastFrame && !(hitboxStamina)) {
         boatHitbox.checkCollisions = true;
     }
 }
+
+
+
 

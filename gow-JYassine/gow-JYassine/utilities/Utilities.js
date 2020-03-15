@@ -1,5 +1,7 @@
 
 var Utilities = {
+
+
     getRandomInt : (max) => {
         return Math.floor(Math.random() * Math.floor(max));
     },
@@ -40,6 +42,7 @@ var Utilities = {
 
 	// give a mesh which has a correctly stretched texture and another mesh which is bigger/smaller.
 	// returns the correctly stretched texture mesh with a correctly stretched texture
+	// !!!!!!!!!!!! UNUSED ??? !!!!!!!!!!!!!!
 	textureRescale : (goodLookingMesh, stretchedMesh) => {
 		toStretchTexture = goodLookingMesh.diffuseTexture.clone();
 		height1 = goodLookingMesh.height;
@@ -51,8 +54,30 @@ var Utilities = {
 		toStretchTexture.uScale = depth1 / depth2;
 		stretchedMesh.diffuseTexture = toStretchTexture;
 		return stretchedMesh;
+	},
+
+	
+	// used upon collision or on game over screen
+	/*unbindControls : function(map) {
+		map["z"] = false;
+		map["q"] = false;
+		map["d"] = false;
+		map["s"] = false;
+	},*/
+
+	bindControls : function(map, scene) {
+		var actionKeyup = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+			map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+
+		});
+		var actionKeydown = scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+			map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+		}));
+		scene.actionManager.registerAction(actionKeyup)
+		scene.actionManager.registerAction(actionKeydown)
 	}
-    
-}
+
+
+};
 
 export default Utilities;
