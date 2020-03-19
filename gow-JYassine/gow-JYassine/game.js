@@ -3,7 +3,6 @@ import GuiGame from "./gui/GuiGame.js";
 import Utilities from "./utilities/Utilities.js"
 import AudioManagerBabylon from "./AudioManager/AudioManagerBabylon.js"
 import AudioGame from "./AudioManager/AudioGame.js"
-import Light from "./core/Light.js"
 import GameLogic from "./core/GameLogic.js"
 import EntityBabylon from "./core/EntityBabylon.js"
 import Vehicle3D from "./core/Vehicle3D.js";
@@ -44,7 +43,11 @@ var boatHitboxSize = 18 // it's a CUBE. this is the hitbox size.
 var hitboxStamina = false; // if true, the boat hitbox is stuck in at least 1 other solid
 var hitboxStaminaLastFrame = false; // same but for the previous frame (both are compared to do stuff)
 
-var baseFirstCheckPoint;
+
+/******** Create gates *******/
+var gates = []
+var gatesVariation; // the function which makes gates move
+var baseFirstGate = -800;
 //var block;
 //MUSIC
 var audioManager;
@@ -52,11 +55,11 @@ var audioManager;
 
 //collision
 var collisionWithObstacle = false
-// checkpoint
-var numberCheckPoint = 5
-var numberCheckPointPassed = 0
+// gates
+var numberGates = 5
+var numberGatesPassed = 0
 
-var maxPositionCheckPoint = 600;
+var maxPositionGate = 600;
 var timerDirection;
 var timeChangeDirection = 0;
 
@@ -91,7 +94,7 @@ var limitX = 800
 // contains all the meshes which float on the water (boat is an exception, it has
 // its own floating animation)
 var floatingElements = []
-var floatRealism;
+var floatRealism; // the function which animates floating elements
 var crateSize = 10;
 var initialCrateHeight = crateSize / 2 - 4.5;
 var frozenTime = 0;
@@ -127,7 +130,7 @@ var createScene = function () {
 
 
     GuiGame.displayGUI(textPassed, babylonGUI, textStart, timer,
-        numberCheckPointPassed, numberCheckPoint, textTimer)//, boatEntity.getMomentum())
+        numberGatesPassed, numberGates, textTimer)//, boatEntity.getMomentum())
     engine.displayLoadingUI()
 
 
@@ -195,7 +198,7 @@ var createScene = function () {
                             var positionXMissile = boatEntity.getMesh().position.x + 30;
                             for (let i = 0; i < numberMissiles; i++) {
                                 // setup to point the missiles need to target
-                                var light2 = customLight.createCustomLight("idMissile", 1, 0, 0, scene)
+                                var light2 = ThingFactory.createCustomLight("idMissile", 1, 0, 0, scene)
                                 var pointMissile = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 20, tessellation: 96 }, scene);
                                 pointMissile.position.z = positionZMissile
                                 pointMissile.position.x = positionXMissile
@@ -338,36 +341,19 @@ var createScene = function () {
 
 
 
-    /***** CUSTOM LIGHT  ******/
-
-    let customLight = new Light()
-    var checkPointLight = customLight.createCustomLight("idcheckPoint", 0, 0, 1, scene)
 
 
+    for (let i = 0; i < numberGates; i++) {
 
+        var aGate = ThingFactory.createGate(60, 20, 110, 
+            !(Utilities.getRandomInt(5) == 3), Utilities.getRandomInt(maxPositionGate), scene);
+        //if (i >= 1) {
+        //    aGate.mesh.position.x = Utilities.getRandomInt(maxPositionGate)
+        //}
 
-    /***** CUSTOM LIGHT  ******/
-
-    /******** Create checkpoints *******/
-    var checkpoints = []
-    baseFirstCheckPoint = -300
-
-    for (let i = 0; i < numberCheckPoint; i++) {
-        var checkPoint = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 400, tessellation: 96 }, scene);
-
-        // Add the particle effect to the checkpoint
-        customLight.aestheticCheckpoint(checkPoint, scene);
-
-
-
-        checkPoint.position.z = baseFirstCheckPoint
-        if (i >= 1) {
-            checkPoint.position.x = Utilities.getRandomInt(maxPositionCheckPoint)
-        }
-        checkPoint.material = checkPointLight;
-        checkPoint.checkCollisions = true
-        checkpoints.push(checkPoint)
-        baseFirstCheckPoint += 500
+        aGate.mesh.position.z = baseFirstGate
+        gates.push(aGate)
+        baseFirstGate += 1300
 
     }
 
@@ -517,6 +503,31 @@ var createScene = function () {
         })
     }, 50)
 
+    gatesVariation = setInterval(() => {
+        gates.forEach(someGate => {
+            someGate.floatVal += someGate.speed/500;
+            let posCalc;
+            if (someGate.linear) {
+                posCalc = someGate.floatVal % (Math.PI * 2)
+                let orientation = (posCalc < Math.PI)
+                posCalc = posCalc % Math.PI
+                if (orientation) {
+                    posCalc = someGate.range * (posCalc/Math.PI)
+                }
+                else {
+                    posCalc = someGate.range * (1-(posCalc/Math.PI))
+                }
+            }
+            else {
+                posCalc = Math.cos(someGate.floatVal) * someGate.range
+            }
+            someGate.mesh.position.x = someGate.initialX + posCalc;
+        })
+    }, 25)
+
+
+
+
 
 
 
@@ -551,21 +562,21 @@ var createScene = function () {
             boatHitbox.isVisible = false; // SET THIS TO TRUE TO SEE THE BOAT HITBOX
 
 
-            /**** HANDLE COLLISION WITH CHECKPOINT *****/
-            checkpoints.forEach(checkP => {
+            /**** HANDLE COLLISION WITH GATES *****/
+            gates.forEach(curGate => {
                 boatEntity.getMesh().actionManager.registerAction(
                     new BABYLON.ExecuteCodeAction(
                         {
                             trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
-                            parameter: checkP
+                            parameter: curGate
                         },
                         function () {
-                            checkP.dispose()
+                            curGate.mesh.dispose()
                             audioManager.find("checkPointSong").play()
                             setTimeout(() => { audioManager.find("checkPointSong").stop() }, 900)
-                            numberCheckPointPassed += 1
-                            textPassed.text = "PASSED : " + numberCheckPointPassed + "/" + numberCheckPoint;
-                            if (numberCheckPointPassed === numberCheckPoint) {
+                            numberGatesPassed += 1
+                            textPassed.text = "PASSED : " + numberGatesPassed + "/" + numberGates;
+                            if (numberGatesPassed === numberGates) {
                                 gameOver(scene, true)
                             }
 
@@ -637,13 +648,6 @@ var createScene = function () {
 
 
 
-        checkpoints.forEach(checkP => {
-            if (timeChangeDirection % 2 == 0) {
-                checkP.position.x += 1
-            } else {
-                checkP.position.x -= 1
-            }
-        })
 
 
         boatEntity.handleMovement(map, boatHitbox)
@@ -735,7 +739,7 @@ const gameOver = (scene, winner) => {
     missiles = []
     pointMissiles = []
 
-    gameLogic.gameOver(winner, panelEndGame, numberCheckPointPassed, textTimer, limitZ)
+    gameLogic.gameOver(winner, panelEndGame, numberGatesPassed, textTimer, limitZ)
 
     let buttonRestart = panelEndGame.getChildByName("gameOver")
     buttonRestart.onPointerClickObservable.add(() => {
@@ -743,7 +747,7 @@ const gameOver = (scene, winner) => {
         scene = undefined
         timer = 0
         textTimer.color = "yellow"
-        numberCheckPointPassed = 0
+        numberGatesPassed = 0
         limitZ = 3500
         babylonGUI.destroy()
         scene = createScene()
