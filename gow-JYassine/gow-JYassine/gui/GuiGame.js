@@ -1,7 +1,7 @@
  var GuiGame = {
 
     displayGUI : (textPassed, babylonGUI,textStart,maxTime,
-        numberCheckPointPassed,numberCheckPoint,textTimer,timer) => { //,momentum) => {
+        numberCheckPointPassed,numberCheckPoint,textTimer) => { //,momentum) => {
         babylonGUI.createGui()
 
         // GUI FOR TEXT STARTING
@@ -46,7 +46,7 @@
         babylonGUI.positionElement(rectTimer,BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP,BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT)
         babylonGUI.add(rectTimer);
 
-        textTimer.text = "Time : " + timer;
+        textTimer.text = textTimer.text;
         rectTimer.addControl(textTimer);
 
         
@@ -125,7 +125,7 @@
         });
     },
 
-    displayGUIGameOver : (babylonGUI,panel,scene,numberCheckPointPassed,timer,textTimer,limitZ,winner)=>{
+    displayGUIGameOver : (babylonGUI,panel,winner)=>{
         
         babylonGUI.add(panel);
 

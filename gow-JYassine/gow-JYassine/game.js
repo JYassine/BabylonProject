@@ -7,7 +7,13 @@ import Light from "./core/Light.js"
 import GameLogic from "./core/GameLogic.js"
 import EntityBabylon from "./core/EntityBabylon.js"
 import Vehicle3D from "./core/Vehicle3D.js";
+import ThingFactory from "./core/ThingFactory.js"
 
+
+
+
+// time IN SECONDS to finish the level
+const timer = 42
 
 var canvas = document.getElementById('renderCanvas');
 var engine = new BABYLON.Engine(canvas, true)
@@ -64,8 +70,14 @@ var textPassed = new BABYLON.GUI.TextBlock();
 var textStart = new BABYLON.GUI.TextBlock();
 var textTimer = new BABYLON.GUI.TextBlock();
 var panelEndGame = new BABYLON.GUI.StackPanel();
-var timer = 0;
-var maxTime = 40
+
+// don't touch the 3 timer variables below
+var timerMin = Math.floor(timer / 60);
+var timerSecs = timer % 60;
+var timerCS = 0;
+// the timer refreshes every : (in centiseconds)
+var timeFrameInterval = 8;
+// 2 cs by default
 
 // gameLogic
 var gameLogic;
@@ -75,6 +87,14 @@ var gameLogic;
 var limitZ = 3500
 var limitX = 800
 
+
+// contains all the meshes which float on the water (boat is an exception, it has
+// its own floating animation)
+var floatingElements = []
+var floatRealism;
+var crateSize = 10;
+var initialCrateHeight = crateSize / 2 - 4.5;
+var frozenTime = 0;
 
 
 
@@ -102,10 +122,12 @@ var createScene = function () {
     // Attach the camera to the canvas
     camera.attachControl(canvas, true);
 
+    textTimer.text = Utilities.writeTime(timerMin, timerSecs, timerCS);
 
 
-    GuiGame.displayGUI(textPassed, babylonGUI, textStart, maxTime,
-        numberCheckPointPassed, numberCheckPoint, textTimer, timer)//, boatEntity.getMomentum())
+
+    GuiGame.displayGUI(textPassed, babylonGUI, textStart, timer,
+        numberCheckPointPassed, numberCheckPoint, textTimer)//, boatEntity.getMomentum())
     engine.displayLoadingUI()
 
 
@@ -128,17 +150,35 @@ var createScene = function () {
                     textStart.dispose()
                     scene.onPointerObservable.remove(scene.onPointerObservable.observers[2])
                     timerInterval = window.setInterval(() => {
-                        timer++;
-                        textTimer.text = "Timer :" + timer;
-                        if (timer > maxTime - 10) {
+                        textTimer.text = Utilities.writeTime(timerMin, timerSecs, timerCS);
+                        if (frozenTime > 0) {
+                            frozenTime -= timeFrameInterval;
+                            if (frozenTime < 0) {
+                                timerCS + frozenTime;
+                            }
+                        }
+                        else {
+                            timerCS -= timeFrameInterval;
+                            if (timerCS <= 0) {
+                                timerCS = 100 + timerCS;
+                                if (timerSecs <= 0) {
+                                    timerSecs = 60 + timerSecs;
+                                    if (!(timerMin)) {
+                                        gameOver(scene, false)
+                                    }
+                                    timerMin -= 1;
+                                }
+                                timerSecs--;
+                            }
+
+                        }
+
+                        /*if (timer > maxTime - 10) {
 
                             audioManager.find("clockSong").play(0, 0, 0.3)
                             textTimer.color = "red"
-                        }
-                        if (timer > maxTime - 1) {
-                            gameOver(scene, false)
-                        }
-                    }, 1000);
+                        }*/
+                    }, timeFrameInterval * 10); // timeFrameInterval is expressed in centiseconds
 
                     // LAUNCH MISSIL WITH TIME INTERVAL OF 7 seconds
                     missileInterval = setInterval(() => {
@@ -217,7 +257,7 @@ var createScene = function () {
                                             audioManager.find("ughSong").play()
                                             missiles[i].getMesh().dispose()
                                             pointMissiles[i].dispose()
-                                            timer += 8
+                                            timerSecs -= 5;
                                             textTimer.color = "red"
                                             textTimer.fontSize = 30
                                             setTimeout(() => {
@@ -349,23 +389,41 @@ var createScene = function () {
 
     var rockMaterial = new BABYLON.StandardMaterial('rockLee', scene);
     rockMaterial.diffuseTexture = rockTexture;
-    
-    var rockHeight = 150    
+
+    var rockHeight = 150
     var rockWidth = 45
     var rockWallSize = 220
-    rockTexture.vScale *= (rockWallSize/2); // repeats the texture with a size depending on the amount of "texture blocks"
-    rockTexture.uScale = rockHeight/120
-    var rockWall1 = new BABYLON.MeshBuilder.CreateBox("rockWall1", { height: rockHeight, 
-        width: rockWidth, depth: rockWidth*rockWallSize }, scene)
+    rockTexture.vScale *= (rockWallSize / 2); // repeats the texture with a size depending on the amount of "texture blocks"
+    rockTexture.uScale = rockHeight / 120
+    var rockWall1 = new BABYLON.MeshBuilder.CreateBox("rockWall1", {
+        height: rockHeight,
+        width: rockWidth, depth: rockWidth * rockWallSize
+    }, scene)
     rockWall1.material = rockMaterial;
-    rockWall1.position = new BABYLON.Vector3(limitX, rockHeight/2, limitZ);
+    rockWall1.position = new BABYLON.Vector3(limitX, rockHeight / 2, limitZ);
     rockWall1.checkCollisions = true;
 
-    var rockWall2 = new BABYLON.MeshBuilder.CreateBox("rockWall2", { height: rockHeight, 
-        width: rockWidth, depth: rockWidth*rockWallSize }, scene)
-        rockWall2.material = rockMaterial;
-        rockWall2.position = new BABYLON.Vector3(-limitX, rockHeight/2, limitZ);
-        rockWall2.checkCollisions = true;
+    var rockWall2 = new BABYLON.MeshBuilder.CreateBox("rockWall2", {
+        height: rockHeight,
+        width: rockWidth, depth: rockWidth * rockWallSize
+    }, scene)
+    rockWall2.material = rockMaterial;
+    rockWall2.position = new BABYLON.Vector3(-limitX, rockHeight / 2, limitZ);
+    rockWall2.checkCollisions = true;
+
+    for (var i = 0; i < 10; i++) {
+        var timeCrate = ThingFactory.createTimeCrate(crateSize, 3, scene);
+        timeCrate.mesh.position = new BABYLON.Vector3(-limitX + Utilities.getRandomInt(1500),
+            initialCrateHeight,
+            limitZ - Utilities.getRandomInt(2000));
+        floatingElements.push(timeCrate);
+        waterMaterial.addToRenderList(timeCrate.mesh);
+
+    }
+
+
+
+
 
 
     // PLUS LE SCALE AUGMENTE
@@ -383,7 +441,7 @@ var createScene = function () {
     */
 
 
-   //var mapBorder = mapBorderBlock.clone(); new BABYLON.MeshBuilder.CreateBox("mapBorder", { height: 40, width: 40, depth: 320}, scene)
+    //var mapBorder = mapBorderBlock.clone(); new BABYLON.MeshBuilder.CreateBox("mapBorder", { height: 40, width: 40, depth: 320}, scene)
     //var limitPlane = new BABYLON.MeshBuilder.CreateBox("box", { height: 40, width: 40, depth: 40 }, scene);
 
 
@@ -448,12 +506,20 @@ var createScene = function () {
 
 
 
-
-
-
     timerDirection = setInterval(() => {
         timeChangeDirection += 1
     }, 3000)
+
+    floatRealism = setInterval(() => {
+        floatingElements.forEach(crate => {
+            crate.floatVal += 0.12;
+            crate.mesh.position.y = initialCrateHeight + Math.cos(crate.floatVal) * 3;
+        })
+    }, 50)
+
+
+
+
 
 
 
@@ -596,13 +662,13 @@ var createScene = function () {
 
         camera.position = new BABYLON.Vector3(
             cameraX,
-            boatPos.y + 13 - (boatEntity.getSpeedRatio() * 18), 
+            boatPos.y + 13 - (boatEntity.getSpeedRatio() * 18),
             cameraZ)
         //camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(48)).add(new BABYLON.Vector3(0, 1.7, 0)))
-        
+
         camera.setTarget(boatPos);
         camera.position.y += 18
-        
+
         if (boatEntity.currentCrashDuration > 0) {
             var violence = boatEntity.getCrashIntensity();
             var violenceRange = violence * 2;
@@ -625,9 +691,20 @@ var createScene = function () {
                 i = obstacleLength
             }
             i++;
-
         }
-        console.log(hitboxStaminaLastFrame, hitboxStamina, boatHitbox.checkCollisions)
+        for (i = 0; i < floatingElements.length; i++) {
+            let curElm = floatingElements[i];
+            if (boatHitbox.intersectsMesh(curElm.mesh, false) && !(curElm.isRemoved)) {
+                //console.log("cc pd");
+                frozenTime += curElm.power * 100
+                curElm.mesh.dispose();
+                curElm.isRemoved = true;
+                curElm = null;
+            }
+
+        };
+        
+
 
         //obstacles.forEach(i_Obstacle => {  
         // })
@@ -658,7 +735,7 @@ const gameOver = (scene, winner) => {
     missiles = []
     pointMissiles = []
 
-    gameLogic.gameOver(winner, panelEndGame, numberCheckPointPassed, timer, textTimer, limitZ)
+    gameLogic.gameOver(winner, panelEndGame, numberCheckPointPassed, textTimer, limitZ)
 
     let buttonRestart = panelEndGame.getChildByName("gameOver")
     buttonRestart.onPointerClickObservable.add(() => {

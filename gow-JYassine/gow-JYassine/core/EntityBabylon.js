@@ -117,7 +117,6 @@ export default class EntityBabylon {
             // crash duration scales with momentum at the impact time
             this.currentCrashDuration = this.minCrashDuration + (this.speedRatio * (this.topSpeed / 1.6));
             this.crashIntensity = (this.topSpeed / 6) + (this.momentum / 3);
-            console.log([this.minCrashDuration, this.currentCrashDuration])
             // there's a minimum crashing recoil speed, else some bad hitbox things can happen
             // also a crashing can't exceed the maximum backtracking speed
             // the recoil can't exceed the backtrack speed
