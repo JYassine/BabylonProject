@@ -167,6 +167,7 @@ var createScene = function () {
                                 if (timerSecs <= 0) {
                                     timerSecs = 60 + timerSecs;
                                     if (!(timerMin)) {
+                                        textTimer.text = Utilities.writeTime(0, 0, 0);
                                         gameOver(scene, false)
                                     }
                                     timerMin -= 1;
