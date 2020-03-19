@@ -614,18 +614,20 @@ var createScene = function () {
         hitboxStaminaLastFrame = hitboxStamina;
         hitboxStamina = false;
         var i = 0;
-        while (i < obstacles.length) {
+        var obstacleLength = obstacles.length;
+        while (i < obstacleLength) {
             if (boatHitbox.intersectsMesh(obstacles[i], false)) {
                 boatHitbox.checkCollisions = false;
                 // we could have different crashing power depending on obstacles later on
                 hitboxStamina = true;
                 boatCrash(audioManager)
                 // no need to check for the other obstacles if there's at least one which struck the boat
-                i = obstacles.length;
+                i = obstacleLength
             }
             i++;
 
         }
+        console.log(hitboxStaminaLastFrame, hitboxStamina, boatHitbox.checkCollisions)
 
         //obstacles.forEach(i_Obstacle => {  
         // })

@@ -130,6 +130,9 @@ export default class EntityBabylon {
         // this.controls is disabled by game over screen for example
         if ((this.currentCrashDuration > 0) || !(this.controls)) {
             this.currentCrashDuration = Math.max(this.currentCrashDuration - 1, 0);
+            
+            //active collisions again when crash duration finished
+            hitbox.checkCollisions = !(this.currentCrashDuration);
         }
         else {
             isBacktracking = (map["s"] || map["S"]);

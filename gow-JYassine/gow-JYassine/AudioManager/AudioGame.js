@@ -4,7 +4,7 @@ var AudioGame = {
         audioManager.addSong("boatSong","audio/boat_song.ogg",true,false,0.5)
         audioManager.addSong("checkPointSong","audio/success_checkpoint.wav",true,false,0.6)
         audioManager.addSong("windSong","audio/wind.ogg",true,true,2)
-        audioManager.addSong("backgroundSong","audio/music_bg.mp3",true,true,3)
+        audioManager.addSong("backgroundSong","audio/music_bg.ogg",true,true,3)
         audioManager.addSong("clickSong","audio/button_click.wav",false,false,2)
         audioManager.addSong("crashSong","audio/crash.mp3",false,false,4)
         audioManager.addSong("clockSong","audio/tick_tock.ogg",false,false,3)
