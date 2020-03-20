@@ -7,6 +7,24 @@ import Utilities from "../utilities/Utilities.js";
 // such as crates, doors, etc
 var ThingFactory = {
 
+    initThingFactory: function (scene) {
+
+        const loader = new BABYLON.AssetsManager(scene);
+        const meshTask = loader.addMeshTask("tesmochefilsdepute",
+            "", "./model/", "sea_stack.obj");
+
+        meshTask.onSuccess = function (task) {
+            const m = task.loadedMeshes;
+            for (let i = 0; i < m.length; i++) {
+                //console.log(m[i])
+            }
+            BABYLON.OBJFileLoader.OPTIMIZE_WITH_UV = true;
+        };
+        loader.load();
+
+        //BABYLON.SceneLoader.ImportMesh("", , "sea_stack.obj", scene, function (rockMesh) {
+    },
+
     createTimeCrate: function (size, power, scene) {
 
 
@@ -51,7 +69,7 @@ var ThingFactory = {
     createGate: function (size, speed, range, linear, xPos, scene) {
         let daLight = ThingFactory.createCustomLight("gateLight", 0, 0, 1, scene);
         var gate = BABYLON.MeshBuilder.CreateCylinder("gate",
-            { diameterTop: size, diameterBottom: size, height: size*7, tessellation: 96 }, scene);
+            { diameterTop: size, diameterBottom: size, height: size * 7, tessellation: 96 }, scene);
         // Add the particle effect to the gate
         aestheticGate(gate, scene);
         gate.material = daLight;
@@ -70,8 +88,44 @@ var ThingFactory = {
 
 
 
+
+    createSeaStack: function (scene, obstacles, stackSize, stackHeight) {
+        let theObjectMaterial = new BABYLON.StandardMaterial("seastack", scene);
+        theObjectMaterial.diffuseTexture = new BABYLON.Texture("./textures/sea_stack.png")
+
+        theObjectMaterial.diffuseTexture.uScale *= 2
+        theObjectMaterial.diffuseTexture.vScale *= 2
+
+        let theObject = BABYLON.MeshBuilder.CreateBox("nicerock",
+            { width: stackSize, depth: stackSize, height: stackHeight, updatable: true }, scene);
+        // if the line below is removed the edges of the rock disappear
+        theObject.forceSharedVertices();
+        theObject.increaseVertices(80);
+        theObject.applyDisplacementMap("./textures/sea_stack_hm.png", 0, 5, null, null, null, true)
+        /* BABYLON.Mesh.CreateGroundFromHeightMap(
+             "seastackHM", "./textures/sea_stack_hm.png", 
+             // width and height of mesh (X and Z axis)
+             200, 200, 
+             // number of subdivisions (surface accuracy, bigger number = more accurate)
+             300, 
+             // minimum, maximum height (height is Y axis)
+             1, 50, scene, false);
+         theObject.rotate(BABYLON.Axis.X, Math.PI/2, BABYLON.Space.WORLD);*/
+        theObject.material = theObjectMaterial;
+
+        obstacles.push(theObject)
+
+        var returnObject = {
+            mesh: theObject,
+            height: stackHeight
+        }
+        return returnObject;
+    },
+
+
+
     // not really meant to be used directly... usually... or is it?
-    createCustomLight: function(id, r, g, b, scene) {
+    createCustomLight: function (id, r, g, b, scene) {
         BABYLON.Effect.ShadersStore[id + "customVertexShader"] = 'precision highp float;  attribute vec3 position; attribute vec3 normal; attribute vec2 uv;  uniform mat4 worldViewProjection; uniform float time;  varying vec3 vPosition; varying vec3 vNormal; varying vec2 vUV;  void main(void) {     vec3 v = position;     gl_Position = worldViewProjection * vec4(v, 1.0);     vPosition = position;     vNormal = normal;     vUV = uv; }';
         BABYLON.Effect.ShadersStore[id + "customFragmentShader"] = `
                     #extension GL_OES_standard_derivatives : enable
@@ -96,8 +150,8 @@ var ThingFactory = {
                         vec3 col = vec3(`+ r + `,` + g + `,` + b + `);
                         gl_FragColor = vec4(col, 0.2);
                     }`;
-    
-    
+
+
         var gateLight = new BABYLON.ShaderMaterial("shader", scene, {
             vertex: id + "custom",
             fragment: id + "custom",
@@ -107,7 +161,7 @@ var ThingFactory = {
                 attributes: ["position", "normal", "uv"],
                 uniforms: ["time", "worldViewProjection"]
             });
-    
+
         return gateLight;
     }
 

@@ -11,6 +11,7 @@ For a long time there’s a place that no one knows... a place hidden by the FBI
 ## How to play ?
 
 <kbd>Z</kbd> : move forward
+<kbd>S</kbd> : move backward
 <kbd>Q</kbd> : turn left
 <kbd>D</kbd> : turn right
 
@@ -28,3 +29,13 @@ https://youtu.be/BfhYcv2lIk8
 ## First version
 
 This is the first version of our game, in the next version we want to add obstacles, and make it more harder for user to succeed the test ! :)
+
+
+## Credits
+
+Thanks to the work of the following artists/rippers for some of the game's resource :
+
+TheLegendOfRenegade (Youtube) - Game BGM
+Friedslick6 (Textures-resource.com) - Crash Bandicoot crate textures
+
+Need to find the sources for the random sound effects

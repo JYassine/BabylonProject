@@ -346,7 +346,7 @@ var createScene = function () {
 
     for (let i = 0; i < numberGates; i++) {
 
-        var aGate = ThingFactory.createGate(60, 20, 110, 
+        var aGate = ThingFactory.createGate(60, 20, 110,
             !(Utilities.getRandomInt(5) == 3), Utilities.getRandomInt(maxPositionGate), scene);
         //if (i >= 1) {
         //    aGate.mesh.position.x = Utilities.getRandomInt(maxPositionGate)
@@ -407,6 +407,17 @@ var createScene = function () {
         waterMaterial.addToRenderList(timeCrate.mesh);
 
     }
+
+
+    for (let i = 0; i < 5; i++) {
+
+        var aSeaStack = ThingFactory.createSeaStack(scene, obstacles, 60, 100);
+        aSeaStack.mesh.position.z = 0 + Utilities.getRandomInt(2000);
+        aSeaStack.mesh.position.x = 0 + Utilities.getRandomInt(1000);
+        aSeaStack.mesh.position.y = aSeaStack.height / 2;
+        //aSeaStack.position.x = aSeaStack.position.x + Utilities.getRandomInt(3000)
+    }
+
 
 
 
@@ -506,17 +517,17 @@ var createScene = function () {
 
     gatesVariation = setInterval(() => {
         gates.forEach(someGate => {
-            someGate.floatVal += someGate.speed/500;
+            someGate.floatVal += someGate.speed / 500;
             let posCalc;
             if (someGate.linear) {
                 posCalc = someGate.floatVal % (Math.PI * 2)
                 let orientation = (posCalc < Math.PI)
                 posCalc = posCalc % Math.PI
                 if (orientation) {
-                    posCalc = someGate.range * (posCalc/Math.PI)
+                    posCalc = someGate.range * (posCalc / Math.PI)
                 }
                 else {
-                    posCalc = someGate.range * (1-(posCalc/Math.PI))
+                    posCalc = someGate.range * (1 - (posCalc / Math.PI))
                 }
             }
             else {
@@ -545,13 +556,15 @@ var createScene = function () {
     boxCollider.isVisible = false
     */
 
-    BABYLON.SceneLoader.ImportMesh("", "./model/", "boat.glb", scene, function (newMeshes) {
+    BABYLON.SceneLoader.ImportMesh("", "./model/", "boat.glb", scene, function (boatMesh) {
 
         scene.executeWhenReady(function () {
 
+            ThingFactory.initThingFactory(scene);
+
             scene.activeCamera.attachControl(canvas);
-            boatEntity = new EntityBabylon(newMeshes[0], scene)
-            boatEntity.setSpinningWheels(newMeshes)
+            boatEntity = new EntityBabylon(boatMesh[0], scene)
+            boatEntity.setSpinningWheels(boatMesh)
             boatEntity.checkCollisions = false;
             boatEntity.getMesh().checkCollisions = false;
             // "the hitbox of the boat is always equal to the boat's position"
@@ -590,6 +603,8 @@ var createScene = function () {
 
             waterMaterial.addToRenderList(boatEntity.getMesh());
 
+
+
             /// useful? v==
             collisionWithObstacle = false;
             // HANDLE COLLISION WITH OBSTACLES
@@ -603,6 +618,7 @@ var createScene = function () {
                 scene.render();
             });
         });
+
 
     });
 
@@ -708,7 +724,7 @@ var createScene = function () {
             }
 
         };
-        
+
 
 
         //obstacles.forEach(i_Obstacle => {  
