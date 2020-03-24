@@ -99,6 +99,10 @@ var crateSize = 10;
 var initialCrateHeight = crateSize / 2 - 4.5;
 var frozenTime = 0;
 
+// this is an instance of ThingFactory, which contains in-game elements
+// such as crates, sea stacks, etc
+var things;
+
 
 
 
@@ -112,7 +116,13 @@ var createScene = function () {
     scene.enablePhysics(gravityVector, physicsPlugin);
     scene.collisionsEnabled = true;
 
-    audioManager = new AudioManagerBabylon(scene);
+    audioManager = new AudioManagerBabylon(scene);    
+    
+    // obstacles is a list of every mesh/object in the game against which the boat would stop against
+    var obstacles = []
+    // load some of the stuff needed in the game, models and some other shit
+    // (on the constructor call)
+    things = new ThingFactory(scene, obstacles);
     gameLogic = new GameLogic(scene, audioManager, babylonGUI)
 
 
@@ -132,6 +142,7 @@ var createScene = function () {
     GuiGame.displayGUI(textPassed, babylonGUI, textStart, timer,
         numberGatesPassed, numberGates, textTimer)//, boatEntity.getMomentum())
     engine.displayLoadingUI()
+
 
 
 
@@ -199,7 +210,7 @@ var createScene = function () {
                             var positionXMissile = boatEntity.getMesh().position.x + 30;
                             for (let i = 0; i < numberMissiles; i++) {
                                 // setup to point the missiles need to target
-                                var light2 = ThingFactory.createCustomLight("idMissile", 1, 0, 0, scene)
+                                var light2 = things.createCustomLight("idMissile", 1, 0, 0, scene)
                                 var pointMissile = BABYLON.MeshBuilder.CreateCylinder("pl", { diameterTop: 60, diameterBottom: 60, height: 20, tessellation: 96 }, scene);
                                 pointMissile.position.z = positionZMissile
                                 pointMissile.position.x = positionXMissile
@@ -346,7 +357,7 @@ var createScene = function () {
 
     for (let i = 0; i < numberGates; i++) {
 
-        var aGate = ThingFactory.createGate(60, 20, 110,
+        var aGate = things.createGate(60, 20, 110,
             !(Utilities.getRandomInt(5) == 3), Utilities.getRandomInt(maxPositionGate), scene);
         //if (i >= 1) {
         //    aGate.mesh.position.x = Utilities.getRandomInt(maxPositionGate)
@@ -369,8 +380,7 @@ var createScene = function () {
     var limitp = 0
 
     /****CREATE LIMITS OF THE GAME *********/
-    // obstacles is a list of every mesh/object in the game against which the boat would stop against
-    var obstacles = []
+
 
     var rockTexture = new BABYLON.Texture("./textures/rock.jpg", scene);
 
@@ -399,7 +409,7 @@ var createScene = function () {
     rockWall2.checkCollisions = true;
 
     for (var i = 0; i < 10; i++) {
-        var timeCrate = ThingFactory.createTimeCrate(crateSize, 3, scene);
+        var timeCrate = things.createTimeCrate(crateSize, 3, scene);
         timeCrate.mesh.position = new BABYLON.Vector3(-limitX + Utilities.getRandomInt(1500),
             initialCrateHeight,
             limitZ - Utilities.getRandomInt(2000));
@@ -407,16 +417,31 @@ var createScene = function () {
         waterMaterial.addToRenderList(timeCrate.mesh);
 
     }
+    
+    let loadSeaStackInterval = setInterval(function() {
+
+        if (ThingFactory.seaStackMeshes.length > 0) {
+            clearInterval(loadSeaStackInterval)
+            for (let i = 0; i < 13; i++) {
+                let aStack = things.createSeaStack(1+ Utilities.getRandomInt(4), 0.5+(Math.random()*2.0));
+                aStack.position.x = -150 + Utilities.getRandomInt(700);
+                aStack.position.y = 0 - Utilities.meshHeight(aStack) / 4
+                aStack.position.z = -2500 + Utilities.getRandomInt(8000);
+            }
+        }
+    }, 20)
 
 
-    for (let i = 0; i < 5; i++) {
+    if (ThingFactory.seaStackMeshes.length > 0) {
+        for (let i = 0; i < 5; i++) {
+            
+    
+            //console.log(ThingFactory.seaStackMeshes);
+        }
 
-        var aSeaStack = ThingFactory.createSeaStack(scene, obstacles, 60, 100);
-        aSeaStack.mesh.position.z = 0 + Utilities.getRandomInt(2000);
-        aSeaStack.mesh.position.x = 0 + Utilities.getRandomInt(1000);
-        aSeaStack.mesh.position.y = aSeaStack.height / 2;
-        //aSeaStack.position.x = aSeaStack.position.x + Utilities.getRandomInt(3000)
     }
+
+
 
 
 
@@ -560,8 +585,6 @@ var createScene = function () {
 
         scene.executeWhenReady(function () {
 
-            ThingFactory.initThingFactory(scene);
-
             scene.activeCamera.attachControl(canvas);
             boatEntity = new EntityBabylon(boatMesh[0], scene)
             boatEntity.setSpinningWheels(boatMesh)
@@ -608,6 +631,8 @@ var createScene = function () {
             /// useful? v==
             collisionWithObstacle = false;
             // HANDLE COLLISION WITH OBSTACLES
+
+               
 
 
 

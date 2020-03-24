@@ -5,7 +5,7 @@ export default class AudioManager{
     }
 
     addSong(name,path){
-        console.log("Song "+ name +" from "+path+ " added to audio manager..")
+        console.log(path+ " loaded.")
     }
 
     find(nameSong){

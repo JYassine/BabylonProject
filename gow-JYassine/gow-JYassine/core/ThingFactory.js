@@ -1,35 +1,55 @@
 import Utilities from "../utilities/Utilities.js";
 
+var touchmydickyes = [];
 
-
-// an utility variable
+// an utility class
 // contains functions to generate in-game things
 // such as crates, doors, etc
-var ThingFactory = {
+export default class ThingFactory{
 
-    initThingFactory: function (scene) {
+    static seaStackMeshes = [];
+    //static boatMeshes = [];
 
-        const loader = new BABYLON.AssetsManager(scene);
-        const meshTask = loader.addMeshTask("tesmochefilsdepute",
+    constructor(scene, obstacles){
+        this.scene = scene;
+        this.obstacles = obstacles;
+
+        // creates the asset manager ("loader"). From what I understood its purpose is to
+        // load ressources, so we use it slyly before the game starts
+        this.loader = new BABYLON.AssetsManager(scene);
+
+        // we add a new task to the loader : pls load the sea stack model
+        var seaStackTask = this.loader.addMeshTask("tesmochefilsdepute",
             "", "./model/", "sea_stack.obj");
+       /* var boatTask = this.loader.addMeshTask("joli bato",
+        "", "./model/", "boat.glb");*/
 
-        meshTask.onSuccess = function (task) {
-            const m = task.loadedMeshes;
-            for (let i = 0; i < m.length; i++) {
-                //console.log(m[i])
+        seaStackTask.onSuccess = function (task) {
+            var seaStackTexture = new BABYLON.Texture("./textures/sea_stack.png", scene);
+            seaStackTexture.vScale *= 4
+            seaStackTexture.uScale *= 4
+            var seaStackMaterial = new BABYLON.StandardMaterial('dat_rock', scene);
+            seaStackMaterial.diffuseTexture = seaStackTexture;
+            
+            let daMeshes = task.loadedMeshes
+            for (let i = 0; i < daMeshes.length; i++) {
+                daMeshes[i].material = seaStackMaterial;
+                daMeshes[i].isVisible = false;
+                ThingFactory.seaStackMeshes.push(daMeshes[i]);   
             }
-            BABYLON.OBJFileLoader.OPTIMIZE_WITH_UV = true;
         };
-        loader.load();
 
-        //BABYLON.SceneLoader.ImportMesh("", , "sea_stack.obj", scene, function (rockMesh) {
-    },
+        // executes the tasks given to the loader. Needed else they can't succeed
+        this.loader.load();
 
-    createTimeCrate: function (size, power, scene) {
+    };
+
+
+    createTimeCrate(size, power, scene) {
 
 
         let columns = 2;
-        let rows = 1;
+        //let rows = 1;
         let faceUV = new Array(6);
 
         // faceUV[i] = new BABYLON.Vector4(i / columns, 0, (i + 1) / columns, 1 / rows);
@@ -59,15 +79,15 @@ var ThingFactory = {
         }
         return returnCrate;
 
-    },
+    };
 
     // if linear is TRUE the gate moves with a fixed speed.
     // if FALSE the gate accelerates, then decelerate on direction switch
     // SPEED is how fast... the gate moves.
     // RANGE is how far... the gate goes.
     // The best is just to try some values until you get what you want
-    createGate: function (size, speed, range, linear, xPos, scene) {
-        let daLight = ThingFactory.createCustomLight("gateLight", 0, 0, 1, scene);
+    createGate(size, speed, range, linear, xPos, scene) {
+        let daLight = this.createCustomLight("gateLight", 0, 0, 1, scene);
         var gate = BABYLON.MeshBuilder.CreateCylinder("gate",
             { diameterTop: size, diameterBottom: size, height: size * 7, tessellation: 96 }, scene);
         // Add the particle effect to the gate
@@ -84,12 +104,42 @@ var ThingFactory = {
         }
         return returnGate;
 
-    },
+    };
 
 
+    // type = the mesh model
+    // size = xyz scaling
+    createSeaStack(type, size) {
+        // careful, this is a shallow copy  
+        let newSeaStack = ThingFactory.seaStackMeshes[type-1].clone()
+        newSeaStack.scaling = new BABYLON.Vector3(size, size, size);
+        // naughty way of copying an object
+        //let newStack = JSON.parse(JSON.stringify())
+        newSeaStack.isVisible = true;
+        newSeaStack.checkCollisions = true;
+        this.obstacles.push(newSeaStack);
+        return newSeaStack;
+
+        //console.log(this.seaStackMeshes);
+        //return this.seaStackMeshes["rock1"]
+        /*const meshTask = loader.addMeshTask("tesmochefilsdepute",
+        "rock_0" + seaStackType, "./model/", "sea_stack.obj");
+        let theMesh;
+        
+        meshTask.onSuccess = function (task) {
+            theMesh = task.loadedMeshes[0];
+            theMesh.checkCollisions = true;
+            obstacles.push(theMesh)
+        };
+        console.log(theMesh)
+        loader.load();
+        BABYLON.OBJFileLoader.OPTIMIZE_WITH_UV = true;
+        return theMesh;*/
+    };
 
 
-    createSeaStack: function (scene, obstacles, stackSize, stackHeight) {
+    /*
+    createSeaStackPoly(scene, obstacles, stackSize, stackHeight) {
         let theObjectMaterial = new BABYLON.StandardMaterial("seastack", scene);
         theObjectMaterial.diffuseTexture = new BABYLON.Texture("./textures/sea_stack.png")
 
@@ -102,7 +152,7 @@ var ThingFactory = {
         theObject.forceSharedVertices();
         theObject.increaseVertices(80);
         theObject.applyDisplacementMap("./textures/sea_stack_hm.png", 0, 5, null, null, null, true)
-        /* BABYLON.Mesh.CreateGroundFromHeightMap(
+         BABYLON.Mesh.CreateGroundFromHeightMap(
              "seastackHM", "./textures/sea_stack_hm.png", 
              // width and height of mesh (X and Z axis)
              200, 200, 
@@ -110,7 +160,7 @@ var ThingFactory = {
              300, 
              // minimum, maximum height (height is Y axis)
              1, 50, scene, false);
-         theObject.rotate(BABYLON.Axis.X, Math.PI/2, BABYLON.Space.WORLD);*/
+         theObject.rotate(BABYLON.Axis.X, Math.PI/2, BABYLON.Space.WORLD);
         theObject.material = theObjectMaterial;
 
         obstacles.push(theObject)
@@ -120,12 +170,12 @@ var ThingFactory = {
             height: stackHeight
         }
         return returnObject;
-    },
+    };*/
 
 
 
     // not really meant to be used directly... usually... or is it?
-    createCustomLight: function (id, r, g, b, scene) {
+    createCustomLight(id, r, g, b, scene) {
         BABYLON.Effect.ShadersStore[id + "customVertexShader"] = 'precision highp float;  attribute vec3 position; attribute vec3 normal; attribute vec2 uv;  uniform mat4 worldViewProjection; uniform float time;  varying vec3 vPosition; varying vec3 vNormal; varying vec2 vUV;  void main(void) {     vec3 v = position;     gl_Position = worldViewProjection * vec4(v, 1.0);     vPosition = position;     vNormal = normal;     vUV = uv; }';
         BABYLON.Effect.ShadersStore[id + "customFragmentShader"] = `
                     #extension GL_OES_standard_derivatives : enable
@@ -163,9 +213,11 @@ var ThingFactory = {
             });
 
         return gateLight;
-    }
+    };
 
 }
+
+
 
 
 
@@ -214,11 +266,3 @@ function aestheticGate(theGate, scene) {
     particleSystem.start();
 
 }
-
-
-
-
-
-
-
-export default ThingFactory;

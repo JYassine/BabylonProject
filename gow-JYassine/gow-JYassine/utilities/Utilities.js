@@ -7,7 +7,15 @@ var Utilities = {
 
     getRandomInt : (max) => {
         return Math.floor(Math.random() * Math.floor(max));
-    },
+	},
+	
+	// return mesh's height (y axis)
+	meshHeight : (someMesh) => {
+		let tmp = someMesh.getBoundingInfo();
+		let tagueuleConnard = Math.abs(tmp.maximum.y - tmp.minimum.y) * someMesh.scaling.y
+		//console.log(tagueuleConnard)
+		return tagueuleConnard
+	},
 
     // simplified face funtion
 	facePoint : (rotatingObject, pointToRotateTo) => {
