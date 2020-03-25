@@ -23,7 +23,7 @@ export default class EntityBabylon {
     entityAngle = 0
 
     // guaranteed minimum angle spin per frame no matter what your current speed is
-    minimumDrift = Math.PI / 800 //Math.PI/600;
+    minimumDrift = Math.PI/200 //Math.PI / 800 //Math.PI/600;
 
     // how violent is a crash with an obstacle
     // upon hitting an obstacle, your momentum is multiplied by the value below to determine

@@ -16,4 +16,19 @@ export default class AudioManager{
 
         }
     }
+
+    play(songName) {
+        let toPlay = this.find(songName);
+        toPlay.play();
+    }
+
+    play(songName, playArg0, playArg1, playArg2) {
+        let toPlay = this.find(songName);
+        toPlay.play(playArg0, playArg1, playArg2);
+    }
+
+    stop(songName) {
+        let toStop = this.find(songName)
+        toStop.stop();
+    }
 }

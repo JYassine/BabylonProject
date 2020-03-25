@@ -56,7 +56,7 @@ var audioManager;
 //collision
 var collisionWithObstacle = false
 // gates
-var numberGates = 5
+var numberGates = 7
 var numberGatesPassed = 0
 
 var maxPositionGate = 600;
@@ -81,6 +81,7 @@ var timerCS = 0;
 // the timer refreshes every : (in centiseconds)
 var timeFrameInterval = 8;
 // 2 cs by default
+var tictock = false;
 
 // gameLogic
 var gameLogic;
@@ -95,8 +96,8 @@ var limitX = 800
 // its own floating animation)
 var floatingElements = []
 var floatRealism; // the function which animates floating elements
-var crateSize = 10;
-var initialCrateHeight = crateSize / 2 - 4.5;
+var crateSize = 15;
+var initialCrateHeight = crateSize / 2 - ((crateSize) / 2.5);
 var frozenTime = 0;
 
 // this is an instance of ThingFactory, which contains in-game elements
@@ -157,7 +158,7 @@ var createScene = function () {
                 case BABYLON.PointerEventTypes.POINTERDOWN:
 
                     BABYLON.Engine.audioEngine.unlock();
-                    audioManager.find("clickSong").play()
+                    audioManager.play("clickSong")
 
                     // make the keyboard keys respond to input
                     Utilities.bindControls(map, scene);
@@ -188,18 +189,19 @@ var createScene = function () {
 
                         }
 
-                        /*if (timer > maxTime - 10) {
-
-                            audioManager.find("clockSong").play(0, 0, 0.3)
+                        if (timerSecs < 10 & timerMin == 0 && !tictock) {
+                            // do you really think this is a song yassine
                             textTimer.color = "red"
-                        }*/
+                            tictock = true;
+                            audioManager.play("clockSong")
+                        }
                     }, timeFrameInterval * 10); // timeFrameInterval is expressed in centiseconds
 
                     // LAUNCH MISSIL WITH TIME INTERVAL OF 7 seconds
                     missileInterval = setInterval(() => {
 
 
-                        audioManager.find("ennemySpottedSong").play()
+                        audioManager.play("ennemySpottedSong")
 
                         setTimeout(() => {
 
@@ -237,7 +239,7 @@ var createScene = function () {
                                 meshMissile.actionManager = new BABYLON.ActionManager(scene);
                                 var missile = new Vehicle3D(meshMissile)
                                 missiles.push(missile)
-                                audioManager.find("missileSong").play()
+                                audioManager.play("missileSong")
 
                                 positionZMissile = positionZMissile - 200
                                 positionXMissile = positionXMissile + 60
@@ -255,8 +257,8 @@ var createScene = function () {
                                         function () {
                                             missiles[i].getMesh().dispose()
                                             pointMissiles[i].dispose()
-                                            audioManager.find("missileSong").stop()
-                                            audioManager.find("explosionMissileSong").play()
+                                            audioManager.stop("missileSong")
+                                            audioManager.play("explosionMissileSong")
                                         }
 
                                     )
@@ -269,7 +271,7 @@ var createScene = function () {
                                             parameter: boatHitbox
                                         },
                                         function () {
-                                            audioManager.find("ughSong").play()
+                                            audioManager.play("ughSong")
                                             missiles[i].getMesh().dispose()
                                             pointMissiles[i].dispose()
                                             timerSecs -= 5;
@@ -279,8 +281,8 @@ var createScene = function () {
                                                 textTimer.color = "white"
                                                 textTimer.fontSize = 24
                                             }, 2000)
-                                            audioManager.find("missileSong").stop()
-                                            audioManager.find("explosionMissileSong").play()
+                                            audioManager.stop("missileSong")
+                                            audioManager.play("explosionMissileSong")
 
                                         }
 
@@ -357,8 +359,8 @@ var createScene = function () {
 
     for (let i = 0; i < numberGates; i++) {
 
-        var aGate = things.createGate(60, 20, 110,
-            !(Utilities.getRandomInt(5) == 3), Utilities.getRandomInt(maxPositionGate), scene);
+        var aGate = things.createGate(60, 12+Math.random()*20, 80 + Math.random()*60,
+            !(Utilities.getRandomInt(4) == 3), Utilities.getRandomInt(maxPositionGate), scene);
         //if (i >= 1) {
         //    aGate.mesh.position.x = Utilities.getRandomInt(maxPositionGate)
         //}
@@ -627,8 +629,8 @@ var createScene = function () {
                         boatEntity.getMesh().actionManager.unregisterAction(gatePickupAction);
                         curGate.mesh.dispose()
                         curGate.isRemoved = true;
-                        audioManager.find("checkPointSong").play()
-                        setTimeout(() => { audioManager.find("checkPointSong").stop() }, 900)
+                        audioManager.play("checkPointSong")
+                        setTimeout(() => { audioManager.stop("checkPointSong") }, 900)
                         numberGatesPassed += 1
                         textPassed.text = "PASSED : " + numberGatesPassed + "/" + numberGates;
                         if (numberGatesPassed === numberGates) {
@@ -670,7 +672,7 @@ var createScene = function () {
 
     document.addEventListener("keydown", function (e) {
         switch (e.keyCode) {
-            case 90:
+            case 90: 
                 var boatSong = audioManager.find("boatSong")
                 if (!boatSong.isPlaying) {
                     boatSong.play()
@@ -726,7 +728,7 @@ var createScene = function () {
 
         camera.position = new BABYLON.Vector3(
             cameraX,
-            boatPos.y + 13 - (boatEntity.getSpeedRatio() * 18),
+            boatPos.y + 28 - (boatEntity.getSpeedRatio() * 30),
             cameraZ)
         //camera.position.copyFrom(boatPos.subtract(boatEntity.getMesh().forward.scale(48)).add(new BABYLON.Vector3(0, 1.7, 0)))
 
@@ -760,11 +762,24 @@ var createScene = function () {
             let curElm = floatingElements[i];
             // might want to use a register/unregister intersect action event later on, more clean
             if (boatHitbox.intersectsMesh(curElm.mesh, false) && !(curElm.isRemoved)) {
-                //console.log("cc pd");
                 frozenTime += curElm.power * 100
-                curElm.mesh.dispose();
+                audioManager.play("crateBreak");
+                //curElm.mesh.dispose();
                 curElm.isRemoved = true;
-                curElm = null;
+                
+                // this sets up and play the quick time crate animation when intersected into
+                let timeCrateGone = setInterval(() => {
+                    let m = curElm.mesh;
+                    if (m.scaling.x >= 3.5) {
+                        m.dispose();
+                        clearInterval(timeCrateGone);
+                    }
+                    m.material.alpha -= 0.15
+                    m.scaling = new BABYLON.Vector3(m.scaling.x+0.75, m.scaling.y+0.75, m.scaling.z+0.75)
+                    //console.log("tete que ta connard")
+                }, 1)
+
+                //curElm = null;
             }
 
         };

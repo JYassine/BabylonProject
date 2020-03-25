@@ -1,6 +1,5 @@
 import Utilities from "../utilities/Utilities.js";
 
-var touchmydickyes = [];
 
 // an utility class
 // contains functions to generate in-game things
@@ -8,6 +7,9 @@ var touchmydickyes = [];
 export default class ThingFactory{
 
     static seaStackMeshes = [];
+    static timeCrateImpactAction = {
+        
+    }
     //static boatMeshes = [];
 
     constructor(scene, obstacles){
@@ -100,7 +102,8 @@ export default class ThingFactory{
             linear: linear,
             speed: speed,
             range: range,
-            initialX: xPos
+            initialX: xPos,
+            isRemoved: false
         }
         return returnGate;
 
