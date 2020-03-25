@@ -48,8 +48,7 @@ A bit old but still gold
 
 http://babylonseascape.livehost.fr
 
-the game works well on firefox but if you use google chrome you can encounter some problems on audio
-
+the game works well on chrome but if you use firefox you can encounter some problems 
 
 
 ## Bugs
