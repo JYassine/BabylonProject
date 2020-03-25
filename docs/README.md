@@ -20,6 +20,8 @@ There are 15 to go through within 69 seconds.
 
 Avoid **sea stacks** and other obstacles as they'll crash your boat and slow you down!
 
+Avoid the **missiles** as they'll reduce your time!
+
 Collect the **time crates** to freeze the time for a few seconds! They exist as 1, 2 or 3 seconds freezing, the longer one being more rare.
 
 ### In-game
@@ -58,6 +60,8 @@ Take a decent distance with the sea stacks. They use an unrealistic, bigger hitb
 To restart the game, refresh it (F5). When getting a game over/winning screen, the prompted button to restart doesn't work correctly.
 
 The map is generated randomly, so if by any chance you happen to start the game stuck in a sea stack, refresh it lol
+
+Taking a gate before the SFX from the previous one ended will loop the sound D:
 
 
 

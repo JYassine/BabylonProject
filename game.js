@@ -433,7 +433,7 @@ var createScene = function () {
     obstacles.push(rockWall3)
     obstacles.push(rockWall4)
 
-    for (var i = 0; i < 30; i++) {
+    for (var i = 0; i < 35; i++) {
         let power = Utilities.getRandomInt(10);
         power = (power == 0 ? 3 : power<=3 ? 2 : 1)
         var timeCrate = things.createTimeCrate(crateSize, power, scene);
