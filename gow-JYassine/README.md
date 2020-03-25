@@ -37,5 +37,6 @@ Thanks to the work of the following artists/rippers for some of the game's resou
 
 TheLegendOfRenegade (Youtube) - Game BGM
 Friedslick6 (Textures-resource.com) - Crash Bandicoot crate textures
+3dtextures.me - boat wood texture
 
 Need to find the sources for the random sound effects

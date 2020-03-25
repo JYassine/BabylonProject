@@ -587,6 +587,23 @@ var createScene = function () {
 
             scene.activeCamera.attachControl(canvas);
             boatEntity = new EntityBabylon(boatMesh[0], scene)
+            
+                                                    // boat_albedo.jpg
+            var boatWoodTexture = new BABYLON.Texture("./textures/sea_stack.png", scene);
+           // boatWoodTexture.vScale *= 200
+           // boatWoodTexture.uScale *= 200
+            var boatWoodMaterial = new BABYLON.StandardMaterial('boatMaterial', scene);
+            boatWoodMaterial.diffuseTexture = boatWoodTexture;
+
+            boatMesh.forEach(theCurMesh => {
+                try {
+                    theCurMesh.material = boatWoodMaterial;
+                }
+                catch (err) {
+                    //
+
+                }
+            })
             boatEntity.setSpinningWheels(boatMesh)
             boatEntity.checkCollisions = false;
             boatEntity.getMesh().checkCollisions = false;
@@ -601,26 +618,27 @@ var createScene = function () {
 
             /**** HANDLE COLLISION WITH GATES *****/
             gates.forEach(curGate => {
-                boatEntity.getMesh().actionManager.registerAction(
-                    new BABYLON.ExecuteCodeAction(
-                        {
-                            trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
-                            parameter: curGate
-                        },
-                        function () {
-                            curGate.mesh.dispose()
-                            audioManager.find("checkPointSong").play()
-                            setTimeout(() => { audioManager.find("checkPointSong").stop() }, 900)
-                            numberGatesPassed += 1
-                            textPassed.text = "PASSED : " + numberGatesPassed + "/" + numberGates;
-                            if (numberGatesPassed === numberGates) {
-                                gameOver(scene, true)
-                            }
-
+                let gatePickupAction = new BABYLON.ExecuteCodeAction(
+                    {
+                        trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
+                        parameter: curGate
+                    },
+                    function () {
+                        boatEntity.getMesh().actionManager.unregisterAction(gatePickupAction);
+                        curGate.mesh.dispose()
+                        curGate.isRemoved = true;
+                        audioManager.find("checkPointSong").play()
+                        setTimeout(() => { audioManager.find("checkPointSong").stop() }, 900)
+                        numberGatesPassed += 1
+                        textPassed.text = "PASSED : " + numberGatesPassed + "/" + numberGates;
+                        if (numberGatesPassed === numberGates) {
+                            gameOver(scene, true)
                         }
 
-                    )
-                );
+                    }
+
+                )
+                boatEntity.getMesh().actionManager.registerAction(gatePickupAction);
             })
             //boxCollider.position = boatEntity.getMesh().position
 
@@ -740,6 +758,7 @@ var createScene = function () {
         }
         for (i = 0; i < floatingElements.length; i++) {
             let curElm = floatingElements[i];
+            // might want to use a register/unregister intersect action event later on, more clean
             if (boatHitbox.intersectsMesh(curElm.mesh, false) && !(curElm.isRemoved)) {
                 //console.log("cc pd");
                 frozenTime += curElm.power * 100
