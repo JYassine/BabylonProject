@@ -42,7 +42,7 @@ Collect the **time crates** to freeze the time for a few seconds! They exist as 
 
 A bit old but still gold
 
-**https://youtu.be/BfhYcv2lIk8**
+**https://www.youtube.com/watch?v=S8iAYV_6VhY**
 
 ## URL of the game
 
