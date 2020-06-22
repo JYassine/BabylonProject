@@ -46,7 +46,7 @@ A bit old but still gold
 
 ## URL of the game
 
-http://babylonseascape.livehost.fr
+http://seascape.livehost.fr/
 
 the game works well on chrome but if you use firefox you can encounter some problems 
 
